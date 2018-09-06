@@ -7,6 +7,8 @@
 		$transcripts = array();
 		$coord = array();
 
+		$strand = $mysqli->query("SELECT strand FROM rtd2_transcripts WHERE g_id = '$g_id' GROUP BY strand")->fetch_object()->strand;
+
 		# Fetch exons
 		try {
 
@@ -44,7 +46,11 @@
 			"okay" => True,
 			"messages" => "Everything seems fine! :D",
 			"transcripts" => $transcripts,
-			"coordinates" => $uniq_coord
+			"coordinates" => $uniq_coord,
+			"gene" => array(
+				"name" => $g_id,
+				"strand" => $strand
+			)
 		));
 		exit;
 

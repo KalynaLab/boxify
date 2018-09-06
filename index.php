@@ -25,20 +25,20 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
         <script type="text/javascript">
-            $.post( "assets/ajax/get_data.php", { gene: "AT1G01040" } ).done(function(output) {
+            $.post( "assets/ajax/get_data.php", { gene: "AT1G01050" } ).done(function(output) {
                 data = $.parseJSON(output);
                 console.log(data);
 
                 if (data["okay"]) {
                     var size = 600,
-                        scale = size / (data["coordinates"][data["coordinates"].length - 1] - data["coordinates"][0]),
+                        scale = (size-100) / (data["coordinates"][data["coordinates"].length - 1] - data["coordinates"][0]),
                         first = data["coordinates"][0],
                         nT = Object.keys(data["transcripts"]).length, 
                         scaledCoord = {};
                     
                     // Scale the coordinates
                     for (var i in data["coordinates"]) {
-                        scaledCoord[String(data["coordinates"][i])] = Math.round((data["coordinates"][i]-first) * scale);
+                        scaledCoord[String(data["coordinates"][i])] = 100 + Math.round((data["coordinates"][i]-first) * scale);
                     }
                     console.log(scaledCoord);
 
@@ -78,28 +78,57 @@
 
                         var cT = 0;
                         for (var t_id in data["transcripts"]) {
-                            drawTranscript(t_id, data["transcripts"][t_id], scaledCoord, cT*18);
+                            drawTranscript(t_id, data["transcripts"][t_id], scaledCoord, data["gene"]["strand"], cT*18);
                             cT += 1;
                         }
 
-                        function drawTranscript(t_id, coord, scaledCoord, vOffset=0, color="#428bca") {
+                        function drawTranscript(t_id, coord, scaledCoord, strand, vOffset=0, color="#428bca") {
+
+                            ctx.font = "12px sans-serif";
+                            ctx.fillStyle = "black";
+                            ctx.textBaseline = "top";
+                            ctx.fillText(t_id, 0, vOffset, 100);
+
                             ctx.fillStyle = color;
-                            ctx.strokeStyle = color;
+                            ctx.strokeStyle = "rgba(1, 1, 1, 0)";
+                            ctx.save();
+
                             var endOfLastExon = 0;
                             for (var i in coord) { 
                                 var start = scaledCoord[String(coord[i][0])],
                                     end = scaledCoord[String(coord[i][1])];
+
+                                // Draw exons
+                                if (strand == '-' && i == 0) { // Negative strand triangle
+                                    start += 6;
+                                    ctx.beginPath();
+                                    ctx.moveTo(start, vOffset);
+                                    ctx.lineTo(start-6, vOffset+6);
+                                    ctx.lineTo(start, vOffset+12);
+                                    ctx.fill();
+                                } else if (strand == '+' && i == coord.length-1) { // Positive strand triangle
+                                    end -= 6;
+                                    ctx.beginPath();
+                                    ctx.moveTo(end, vOffset);
+                                    ctx.lineTo(end+6, vOffset+6);
+                                    ctx.lineTo(end, vOffset+12);
+                                    ctx.fill();
+                                }
                                 ctx.fillRect(start, vOffset, end-start, 12);
 
-
+                                // Draw introns
                                 if (i > 0 && i < coord.length) {
+                                    ctx.beginPath();
+                                    ctx.strokeStyle = color;
+                                    ctx.lineWidth = 2;
                                     ctx.moveTo(endOfLastExon, vOffset+6);
-                                    ctx.lineTo(start, vOffset+6);
+                                    ctx.quadraticCurveTo(endOfLastExon, vOffset+6, start, vOffset+6);
                                     ctx.stroke();
+                                    ctx.closePath();
+                                    ctx.restore();
                                 }
 
                                 endOfLastExon = end;
-
 
                             }
                         }
