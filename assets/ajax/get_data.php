@@ -10,7 +10,7 @@
 
 		# Get some gene information
 		try {
-			$stmt = $db->prepare("SELECT chr, strand FROM rtd2_genes WHERE g_id = :g_id");
+			$stmt = $db->prepare("SELECT chr, start, end, genomic_seq AS seq, strand FROM rtd2_genes WHERE g_id = :g_id");
 			$stmt->bindValue('g_id', $g_id);
 			$stmt->execute();
 			if ($stmt->rowCount() == 1) {

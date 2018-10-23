@@ -49,6 +49,7 @@
             }
             #error_messages { display: none; }
             #settings { display: none; }
+            #seq {  }
         </style>
     </head>
     <body>
@@ -62,7 +63,7 @@
 
                             <div class="form-group">
                                 <label for="gene" class="control-label">Gene</label>
-                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860">
+                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860" value="AT3G61860">
                             </div>
 
                             <div id="error_messages" class="alert alert-danger"></div>
@@ -90,6 +91,8 @@
                     <canvas id="boxify">
                         Your browser does not support HTML5 canvas.
                     </canvas>
+
+                    <pre id="seq"></pre>
                 </div>
             </div>
         </div>
@@ -221,9 +224,7 @@
 
                         }
                     }
-
                 }
-
             }
 
             $(document).on('click', '#form_submit', function(e) {
@@ -263,12 +264,34 @@
                         data["scaledCdsCoord"] = scaledCdsCoord;
                         //console.log(scaledCdsCoord);
 
+                        var transcripts = Object.keys(data["transcripts"]);
+
+                        // Get spliced sequences
+                        var gene_start = parseInt(data["gene"]["start"]),
+                        	seq = data["gene"]["seq"];
+                        if (data["gene"]["strand"] == '-') { seq = seq.split('').reverse().join(''); }
+                        for (var i = 0; i < transcripts.length; i++) {
+                        	var t_id = transcripts[i],
+                        		exons = data["transcripts"][t_id]["exons"],
+                        		spliced_seq = "";
+                        	for (var j in exons) {
+    	                        var start = exons[j][0],
+    	                        	end = exons[j][1];
+    	                        spliced_seq += seq.slice(start-gene_start, (end-gene_start)+1);
+                        	}
+                        	if (data["gene"]["strand"] == '+') {
+                        		data["transcripts"][t_id]["seq"] = spliced_seq;
+                        	} else {
+                        		data["transcripts"][t_id]["seq"] = spliced_seq.split('').reverse().join('');
+                        	}
+                        }
+
                         // Store cookie for re-drawing
                         Cookies.set('drawing-data', data);
                         //console.log(data);
 
                         // Draw models
-                        var transcripts = Object.keys(data["transcripts"]);
+
                         boxify(size, data, transcripts);
 
                         // Add transcripts to settings
