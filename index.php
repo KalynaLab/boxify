@@ -265,6 +265,7 @@
                         for (var i in data["cdsCoord"]) {
                             scaledCdsCoord[String(data["cdsCoord"][i])] = 125 + Math.round((data["cdsCoord"][i]-first) * scale);
                         }
+                        data["scaleFactor"] = scale;
                         data["scaledCdsCoord"] = scaledCdsCoord;
                         //console.log(scaledCdsCoord);
 
