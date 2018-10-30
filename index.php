@@ -51,6 +51,7 @@
             #error_messages { display: none; }
             #settings { display: none; }
             #seq {  }
+            .is-breakable { word-break: break-word; }
         </style>
     </head>
     <body>
