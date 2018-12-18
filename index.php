@@ -19,6 +19,7 @@
         * Need to "hide" the genomic and spliced sequences in the HTML, because the cookie gets to big otherwise
         * Add reset settings option
         * Need to add coordinate re-scaling
+        * Check cookie size for "big" genes (GRP7 - AT2G21660)
 -->
 
 <html>
