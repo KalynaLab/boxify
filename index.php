@@ -8,7 +8,6 @@
 <!--
     To-do:
         * Catch/Handle missing CDS
-        * Change transcript/CDS colors
         * Add coordinates tooltips (http://jsfiddle.net/m1erickson/yLBjM/, https://stackoverflow.com/questions/17064913/display-tooltip-in-canvas-graph, https://stackoverflow.com/questions/30795139/displaying-tooltips-on-mouse-hover-on-shapes-positioncoordinates-on-canvas?rq=1) 
         * Export as (vector) image
         * Add form (search, primers, colors, etc)
@@ -50,8 +49,12 @@
             }
             #error_messages { display: none; }
             #settings { display: none; }
-            #seq {  }
+            #seq { display: none; }
             .is-breakable { word-break: break-word; }
+            input[type="color"] {
+                width: 23px;
+                float: right;
+            }
         </style>
     </head>
     <body>
@@ -86,6 +89,13 @@
                             </div>
 
                             <div id="size">600</div>
+
+                            <label for="transcriptColor">Transcript color: </label>
+                            <input type="color" id="transcriptColor" value="#428bca">
+
+                            <label for="cdsColor">CDS color: </label>
+                            <input type="color" id="cdsColor" value="#51a351">
+
                             <p>Click the "Redraw" button to apply the changes</p>
                             <button type="button" class="btn" id="redraw">Redraw</button>
                         </div>
@@ -378,11 +388,19 @@
 
             // Redraw everything
             $(document).on('click', '#redraw', function() {
+
+                // Select the active transcripts
                 var transcripts = [];
                 $('#select-transcripts').find('.list-group-item-dark').each(function() {
                     transcripts.push($(this).html());
                 });
-                boxify(parseInt($('#size').html()), Cookies.getJSON('drawing-data'), transcripts);
+
+                // Get the transcript and CDS colors
+                var transcriptColor = $('#transcriptColor').val(),
+                    cdsColor = $('#cdsColor').val();
+
+                // Redraw
+                boxify(parseInt($('#size').html()), Cookies.getJSON('drawing-data'), transcripts, transcriptColor, cdsColor);
             });
 
         </script>
