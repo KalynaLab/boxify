@@ -17,6 +17,8 @@
         * Add multiple organisms
         * Add gene search autocomplete (https://www.codexworld.com/autocomplete-textbox-using-jquery-php-mysql/)
         * Need to "hide" the genomic and spliced sequences in the HTML, because the cookie gets to big otherwise
+        * Add reset settings option
+        * Need to add coordinate re-scaling
 -->
 
 <html>
@@ -34,6 +36,7 @@
             }
             #select-transcripts {
                 width: 100%;
+                margin-bottom: 1rem;
             }
             #select-transcripts .list-group-item {
                 padding: .25rem .75rem;
@@ -48,9 +51,16 @@
                 white-space: nowrap;
             }
             #error_messages { display: none; }
+            
             #settings { display: none; }
+            #settings p { font-size: 0.9rem; }
+
             #seq { display: none; }
             .is-breakable { word-break: break-word; }
+            
+            #size { width: 100%; }
+
+            .color-form { margin-bottom: 0rem; }
             input[type="color"] {
                 width: 23px;
                 float: right;
@@ -84,17 +94,31 @@
                             <div class="sidebar-header">
                                 <h4>Settings</h4>
                             </div>
+
+                            <h5>Transcript visibility</h5>
                             <p>Toggle the transcript visibility here. Drag and drop the transcript identifiers to change their order.</p>
                             <div class="list-group text-center" id="select-transcripts">
                             </div>
 
-                            <div id="size">600</div>
+                            <h5>Draw size</h5>
+                            <p>Drag the slider to adjust draw size of the transcript models.</p>
+                            <div class="form-group">
+                                <label for="drawSize">Size (<span id="slideSize">600</span>)</label>
+                                <input type="range" id="size" name="drawSize"  min="600" value="600" max="1400" step="50" oninput="updateSize(value)">
+                            </div>
 
-                            <label for="transcriptColor">Transcript color: </label>
-                            <input type="color" id="transcriptColor" value="#428bca">
+                            <h5>Colors</h5>
+                            <div class="form-group color-form">
+                                <label for="transcriptColor">Transcript color: </label>
+                                <input type="color" id="transcriptColor" value="#428bca">
+                            </div>
 
-                            <label for="cdsColor">CDS color: </label>
-                            <input type="color" id="cdsColor" value="#51a351">
+                            <div class="form-group color-form">
+                                <label for="cdsColor">CDS color: </label>
+                                <input type="color" id="cdsColor" value="#51a351">
+                            </div>
+
+                            <hr />
 
                             <p>Click the "Redraw" button to apply the changes</p>
                             <button type="button" class="btn" id="redraw">Redraw</button>
@@ -119,6 +143,26 @@
         <script type="text/javascript">
 
             function boxify(size, data, transcripts, exonColor="#428bca", cdsColor="#51A351") {
+
+                var scale = (size-100) / (data["exonCoord"][data["exonCoord"].length - 1] - data["exonCoord"][0]),
+                    first = data["exonCoord"][0],
+                    scaledExonCoord = {},
+                    scaledCdsCoord = {};
+
+                // Scale the coordinates
+                for (var i in data["exonCoord"]) {
+                    scaledExonCoord[String(data["exonCoord"][i])] = 125 + Math.round((data["exonCoord"][i]-first) * scale);
+                }
+                data["scaledExonCoord"] = scaledExonCoord;
+                //console.log(scaledExonCoord);
+
+                // Scale the CDS coordinates
+                for (var i in data["cdsCoord"]) {
+                    scaledCdsCoord[String(data["cdsCoord"][i])] = 125 + Math.round((data["cdsCoord"][i]-first) * scale);
+                }
+                data["scaleFactor"] = scale;
+                data["scaledCdsCoord"] = scaledCdsCoord;
+                //console.log(scaledCdsCoord);
 
                 var nT = transcripts.length;
                 window.addEventListener("load", eventWindowLoaded(), false);
@@ -258,26 +302,6 @@
                     //console.log(data);
 
                     if (data["okay"]) {
-                        var size = parseInt($('#size').html()),
-                            scale = (size-100) / (data["exonCoord"][data["exonCoord"].length - 1] - data["exonCoord"][0]),
-                            first = data["exonCoord"][0],
-                            scaledExonCoord = {},
-                            scaledCdsCoord = {};
-                        
-                        // Scale the coordinates
-                        for (var i in data["exonCoord"]) {
-                            scaledExonCoord[String(data["exonCoord"][i])] = 125 + Math.round((data["exonCoord"][i]-first) * scale);
-                        }
-                        data["scaledExonCoord"] = scaledExonCoord;
-                        //console.log(scaledExonCoord);
-
-                        // Scale the CDS coordinates
-                        for (var i in data["cdsCoord"]) {
-                            scaledCdsCoord[String(data["cdsCoord"][i])] = 125 + Math.round((data["cdsCoord"][i]-first) * scale);
-                        }
-                        data["scaleFactor"] = scale;
-                        data["scaledCdsCoord"] = scaledCdsCoord;
-                        //console.log(scaledCdsCoord);
 
                         // Get spliced sequences
                         var transcripts = Object.keys(data["transcripts"]),
@@ -314,7 +338,7 @@
                         Cookies.set('drawing-data', data);
 
                         // Draw models
-                        boxify(size, data, transcripts);
+                        boxify(parseInt($('#size').val()), data, transcripts);
 
                         // Add transcripts to settings
                         $('#select-transcripts').html("");
@@ -334,8 +358,6 @@
                 });
 
             });
-
-
 
             // Transcript order dragging
             var dragging = null,
@@ -386,6 +408,12 @@
                 $(this).toggleClass('list-group-item-dark');
             });
 
+            // Transcript size
+            function updateSize(x) {
+                console.log(x);
+                $('#slideSize').html(x);
+            }
+
             // Redraw everything
             $(document).on('click', '#redraw', function() {
 
@@ -400,7 +428,7 @@
                     cdsColor = $('#cdsColor').val();
 
                 // Redraw
-                boxify(parseInt($('#size').html()), Cookies.getJSON('drawing-data'), transcripts, transcriptColor, cdsColor);
+                boxify(parseInt($('#size').val()), Cookies.getJSON('drawing-data'), transcripts, transcriptColor, cdsColor);
             });
 
         </script>
