@@ -78,7 +78,7 @@
 
                             <div class="form-group">
                                 <label for="gene" class="control-label">Gene</label>
-                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860" value="AT3G61860">
+                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860" value="AT3G61860" onkeyup="this.value = this.value.toUpperCase();">
                             </div>
 
                             <div id="error_messages" class="alert alert-danger"></div>
@@ -103,7 +103,7 @@
                             <h5>Draw size</h5>
                             <p>Drag the slider to adjust draw size of the transcript models.</p>
                             <div class="form-group">
-                                <label for="drawSize">Size (<span id="slideSize">600</span>)</label>
+                                <label for="drawSize"><span id="slideSize">600</span>px</label>
                                 <input type="range" id="size" name="drawSize"  min="600" value="600" max="1400" step="50" oninput="updateSize(value)">
                             </div>
 
@@ -120,7 +120,7 @@
 
                             <hr />
 
-                            <p>Click the "Redraw" button to apply the changes</p>
+                            <p>Click the "Redraw" button to apply the changes.</p>
                             <button type="button" class="btn" id="redraw">Redraw</button>
                         </div>
                     </div>
@@ -338,7 +338,7 @@
                         Cookies.set('drawing-data', data);
 
                         // Draw models
-                        boxify(parseInt($('#size').val()), data, transcripts);
+                        boxify(parseInt($('#size').val()), data, transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
 
                         // Add transcripts to settings
                         $('#select-transcripts').html("");
@@ -423,12 +423,8 @@
                     transcripts.push($(this).html());
                 });
 
-                // Get the transcript and CDS colors
-                var transcriptColor = $('#transcriptColor').val(),
-                    cdsColor = $('#cdsColor').val();
-
                 // Redraw
-                boxify(parseInt($('#size').val()), Cookies.getJSON('drawing-data'), transcripts, transcriptColor, cdsColor);
+                boxify(parseInt($('#size').val()), Cookies.getJSON('drawing-data'), transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
             });
 
         </script>
