@@ -18,7 +18,6 @@
         * Add gene search autocomplete (https://www.codexworld.com/autocomplete-textbox-using-jquery-php-mysql/)
         * Need to "hide" the genomic and spliced sequences in the HTML, because the cookie gets to big otherwise
         * Add reset settings option
-        * Need to add coordinate re-scaling
         * Check cookie size for "big" genes (GRP7 - AT2G21660)
 -->
 
@@ -55,6 +54,8 @@
             
             #settings { display: none; }
             #settings p { font-size: 0.9rem; }
+            .settings-header { cursor: pointer; }
+            .settings-content { display: none; }
 
             #seq { display: none; }
             .is-breakable { word-break: break-word; }
@@ -92,34 +93,39 @@
 
                             <hr />
 
-                            <div class="sidebar-header">
-                                <h4>Settings</h4>
+                            <div class="settings-header">
+                                <h4 class="d-inline-block">Settings</h4> <span class="caret d-inline-block align-top">&#9660;</span>
                             </div>
 
-                            <h5>Transcript visibility</h5>
-                            <p>Toggle the transcript visibility here. Drag and drop the transcript identifiers to change their order.</p>
-                            <div class="list-group text-center" id="select-transcripts">
+                            <div class="settings-content">
+
+                                <h5>Transcript visibility</h5>
+                                <p>Toggle the transcript visibility here. Drag and drop the transcript identifiers to change their order.</p>
+                                <div class="list-group text-center" id="select-transcripts">
+                                </div>
+
+                                <h5>Draw size</h5>
+                                <p>Drag the slider to adjust draw size of the transcript models.</p>
+                                <div class="form-group">
+                                    <label for="drawSize"><span id="slideSize">600</span>px</label>
+                                    <input type="range" id="size" name="drawSize"  min="600" value="600" max="1400" step="50" oninput="updateSize(value)">
+                                </div>
+
+                                <h5>Colors</h5>
+                                <div class="form-group color-form">
+                                    <label for="transcriptColor">Transcript color: </label>
+                                    <input type="color" id="transcriptColor" value="#428bca">
+                                </div>
+
+                                <div class="form-group color-form">
+                                    <label for="cdsColor">CDS color: </label>
+                                    <input type="color" id="cdsColor" value="#51a351">
+                                </div>
+
+                                <hr />
+
                             </div>
 
-                            <h5>Draw size</h5>
-                            <p>Drag the slider to adjust draw size of the transcript models.</p>
-                            <div class="form-group">
-                                <label for="drawSize"><span id="slideSize">600</span>px</label>
-                                <input type="range" id="size" name="drawSize"  min="600" value="600" max="1400" step="50" oninput="updateSize(value)">
-                            </div>
-
-                            <h5>Colors</h5>
-                            <div class="form-group color-form">
-                                <label for="transcriptColor">Transcript color: </label>
-                                <input type="color" id="transcriptColor" value="#428bca">
-                            </div>
-
-                            <div class="form-group color-form">
-                                <label for="cdsColor">CDS color: </label>
-                                <input type="color" id="cdsColor" value="#51a351">
-                            </div>
-
-                            <hr />
 
                             <p>Click the "Redraw" button to apply the changes.</p>
                             <button type="button" class="btn" id="redraw">Redraw</button>
@@ -414,6 +420,12 @@
                 console.log(x);
                 $('#slideSize').html(x);
             }
+
+            // Hide/Display settings
+            $(document).on('click', '.settings-header', function() {
+                $('.settings-content').toggle();
+                $('.caret').html(($('.caret').html().charCodeAt(0) === 9660 ? "&#9650;" : "&#9660;"));
+            });
 
             // Redraw everything
             $(document).on('click', '#redraw', function() {
