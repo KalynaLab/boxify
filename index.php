@@ -73,7 +73,7 @@
 
         <div class="container-fluid">
             <div class="row">
-                <div class="col-3 p-3 bg-light" id="sticky-sidebar">
+                <div class="col-md-3 col-lg-2 p-3 bg-light" id="sticky-sidebar">
                     <div class="sticky-top">
 
                         <form action="" method="POST">
@@ -417,7 +417,6 @@
 
             // Transcript size
             function updateSize(x) {
-                console.log(x);
                 $('#slideSize').html(x);
             }
 
