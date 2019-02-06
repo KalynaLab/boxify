@@ -29,8 +29,11 @@
             var lives = 3;
             var livesText;
             var lifeLostText;
+            var pausedText;
             
             var playing = false;
+            var paused = false;
+            var lastVelocity;
             
             function preload() {
                 game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
@@ -57,7 +60,7 @@
                 ball.events.onOutOfBounds.add(ballLeaveScreen, this);
                 
                 // ADJUST PADDLE WIDTH DYNAMICALLY BASED ON THE WINDOW WIDTH
-                paddle = game.add.sprite(game.world.width*0.5, game.world.height-10, drawRect(10, 50));
+                paddle = game.add.sprite(game.world.width*0.5, game.world.height-10, drawRect(10, game.world.width*0.10));
                 paddle.anchor.set(0.5, 1);
                 game.physics.enable(paddle, Phaser.Physics.ARCADE);
                 paddle.body.collideWorldBounds = true;
@@ -65,7 +68,6 @@
                 
                 //initBricks();
                 drawBricks(w, Cookies.getJSON('drawing-data'));
-                
                 
                 // Score and lives labels
                 textStyle = { font: '10px Arial', fill: '#428bca' };
@@ -76,10 +78,12 @@
                 lifeLostText.anchor.set(0.5);
                 lifeLostText.visible = false;
                 
+                pausedText = game.add.text(game.world.width*0.5, game.world.height*0.5, "Game paused, press SPACE to continue", textStyle);
+                pausedText.anchor.set(0.5);
+                pausedText.visible = false;
+
                 SPACEBAR = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-                SPACEBAR.onDown.addOnce(startGame, this);
-                
-                // ADD PAUSE STATE
+                SPACEBAR.onDown.add(startPauseGame, this);
                 
             }
             function update() {
@@ -200,35 +204,6 @@
                 }
             }
             
-            function initBricks() {
-                brickInfo = {
-                    width: 50,
-                    height: 20,
-                    count: {
-                        row: 3,
-                        col: 7
-                    },
-                    offset: { 
-                        top: 50,
-                        left: 60
-                    },
-                    padding: 10
-                };
-                bricks = game.add.group();
-                for (c=0; c < brickInfo.count.col; c++) {
-                    for (r=0; r < brickInfo.count.row; r++) {
-                        var brickX = (c*(brickInfo.width+brickInfo.padding))+brickInfo.offset.left;
-                        var brickY = (r*(brickInfo.height+brickInfo.padding))+brickInfo.offset.top;
-                        newBrick = game.add.sprite(brickX, brickY, drawRect(brickInfo.height, brickInfo.width));
-                        newBrick.health = 1;
-                        game.physics.enable(newBrick, Phaser.Physics.ARCADE);
-                        newBrick.body.immovable = true;
-                        newBrick.anchor.set(0.5);
-                        bricks.add(newBrick);
-                    }
-                }
-            }
-            
             function ballHitBrick(ball, brick) {
                 brick.health -= 1;
                 score += 10;
@@ -270,10 +245,10 @@
                     paddle.reset(game.world.width*0.5, game.world.height-10);
                     
                     // http://www.html5gamedevs.com/topic/37039-is-there-a-way-to-only-detect-one-key-press/
-                    SPACEBAR = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-                    SPACEBAR.onDown.addOnce(startGame, this);
+                    //SPACEBAR = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+                    //SPACEBAR.onDown.add(startPauseGame, this);
                     
-                    game.input.onDown.addOnce(startGame, this)
+                    game.input.onDown.addOnce(startPauseGame, this)
                     
                 } else {
                     alert('Game over!');
@@ -286,16 +261,28 @@
                 ball.body.velocity.x = -1.5*5*(paddle.x-ball.x);
             }
             
-            function startGame() {                
+            function startPauseGame() {             
                 lifeLostText.visible = false;
-                ball.body.velocity.set(150, -150);
                 
-                var randomAngle = Math.floor(Math.random() * (135 - 45) / 5) * 5 + 45;
-                var angleOfFire = Phaser.Math.degToRad(randomAngle);
-                console.log(randomAngle, angleOfFire);
-                ball.body.velocity.set(250 * Math.cos(angleOfFire), -250 * Math.sin(angleOfFire));
-                console.log(ball.body.velocity);
-                playing = true
+                if (paused) {
+                    //console.log("RESTART", lastVelocity);
+                    ball.body.velocity.set(lastVelocity[0], lastVelocity[1]);
+                    paused = false;
+                    pausedText.visible = false;
+                } else if (playing) {
+                    lastVelocity = [ball.body.velocity.x, ball.body.velocity.y];
+                    //console.log("PAUSE", lastVelocity);
+                    ball.body.velocity.set(0, 0);                
+                    paused = true;
+                    pausedText.visible = true;
+                } else {
+                    var randomAngle = Math.floor(Math.random() * (135 - 45) / 5) * 5 + 45;
+                    var angleOfFire = Phaser.Math.degToRad(randomAngle);
+                    ball.body.velocity.set(250 * Math.cos(angleOfFire), -250 * Math.sin(angleOfFire));
+                    console.log(randomAngle, angleOfFire);
+                    console.log(ball.body.velocity);
+                    playing = true;
+                }
             }
             
         </script>
