@@ -3,18 +3,57 @@
     <head>
         <meta charset="utf-8" />
         <title>Breakout</title>
-        <style>* { padding: 0; margin: 0; }</style>
+        <style>
+            * { padding: 0; margin: 0; }
+            #breakout { min-width: 600px; max-width: 800px; margin: 0 auto; }
+        </style>
         <script src="assets/js/js.cookie.js"></script>
         <script src="assets/js/phaser.v2.11.1.min.js"></script>
         
     </head>
     <body>
+        <div id="breakout"></div>
         <script>
-            var w = window.innerWidth;       
+
+
+            function range(start, end) {
+                return [...Array((end-start)+1).keys()].map(i => i + start);
+            }
+
+            // Javascript set operations
+            // https://medium.com/mindorks/implementing-set-operation-in-javascript-2a98b92fc6dc
+            function union(setA, setB) {
+                var _union = new Set(setA);
+                for (var elem of setB) {
+                    _union.add(elem);
+                }
+                return _union;
+            }
+
+            function intersection(setA, setB) {
+                var _intersection = new Set();
+                for (var elem of setA) {
+                    if (setB.has(elem)) {
+                        _intersection.add(elem);
+                    }
+                }
+                return _intersection;
+            }
+
+            function difference(setA, setB) {
+                var _difference = new Set(setA);
+                for (var elem of setB) {
+                    _difference.delete(elem);
+                }
+                return _difference;
+            }
+
+            //var w = window.innerWidth;       
+            var w = document.getElementById('breakout').clientWidth;
             
             //console.log(Cookies.getJSON('drawing-data'));
             
-            var game = new Phaser.Game(w, w*0.5, Phaser.CANVAS, null, {
+            var game = new Phaser.Game(w, w*0.75, Phaser.CANVAS, 'breakout', {
               preload: preload, create: create, update: update
             });
             
@@ -146,7 +185,7 @@
                 // Scale the CDS coordinates
                 for (var i in data["cdsCoord"]) {
                     scaledCdsCoord[String(data["cdsCoord"][i])] = 50 + Math.round((data["cdsCoord"][i]-first) * scale);
-                    console.log(data["cdsCoord"][i], first, data["cdsCoord"][i] - first);
+                    //console.log(data["cdsCoord"][i], first, data["cdsCoord"][i] - first);
                 }
                 
                 bricks = game.add.group();
