@@ -14,8 +14,7 @@
     <body>
         <div id="breakout"></div>
         <script>
-
-
+            
             function range(start, end) {
                 return [...Array((end-start)+1).keys()].map(i => i + start);
             }
@@ -167,80 +166,118 @@
             
             function drawBricks(w, data) {
                 
-                var scale = (w - 100) / (data["exonCoord"][data["exonCoord"].length - 1] - data["exonCoord"][0]),
-                    first = data["exonCoord"][0],
-                    scaledExonCoord = {},
-                    scaledCdsCoord = {},
-                    transcripts = Object.keys(data["transcripts"]);
-                
-                console.log(w);
-                console.log(scale, first);
-                console.log(data);
-                
-                // Scale the coordinates
-                for (var i in data["exonCoord"]) {
-                    scaledExonCoord[String(data["exonCoord"][i])] = 50 + Math.round((data["exonCoord"][i]-first) * scale);
+                var transcripts = {},
+                    tmpExons = new Set([]);
+                for (var t_id in data['transcripts']) {
+                    exons = [...Array.from(data['transcripts'][t_id]['exons'].values())];
+                    CDS = [...Array.from(data['transcripts'][t_id]['cds'].values())];
+                    transcripts[t_id] = {
+                        'exons': exons,
+                        'cds': CDS,
+                        'exonBricks': [...Array.from(exons.values())]
+                    }
+                    
+                    // Subtract the overlapping CDS parts from the exons
+                    for (var i = 0; i < CDS.length; i++) {
+                        cSet = new Set(range(CDS[i][0], CDS[i][1]));
+                        
+                        for (var j = 0; j < exons.length; j++) {
+                            eSet = new Set(range(exons[j][0], exons[j][1]));
+                            
+                            // Exon and CDS overlap
+                            if (intersection(cSet, eSet).size) {
+                                var diff = difference(eSet, cSet);
+                                
+                                // CHECK FOR THE CASE THAT THE CDS IS INSIDE THE EXON
+                                
+                                // Exon partly overlaps with the CDS
+                                if (diff.size) {
+                                    x = Math.min(...Array.from(diff.values()));
+                                    y = Math.max(...Array.from(diff.values()));
+                                    tmpExons.add(x);
+                                    tmpExons.add(y);
+                                    transcripts[t_id]['exonBricks'][j] = [x, y];
+                                
+                                    // Exon is entirely contained in the CDS
+                                } else {
+                                    transcripts[t_id]['exonBricks'][j] = [];
+                                }
+                                
+                            // No overlap
+                            } else {
+                                tmpExons.add(exons[j][0]);
+                                tmpExons.add(exons[j][1]);
+                            }
+                        }
+                    }
                 }
+                
+                var allExons = [...Array.from(tmpExons.values())];
+
+                // Numerical sort
+                //allExons.sort((a, b) => a - b);
+                var scale = (w - 100) / (Math.max(...allExons) - Math.min(...allExons)),
+                    first = Math.min(...allExons);
+                
+                // Scale the exon coordinates
+                var scaledExons = {};
+                for (var i in allExons) {
+                    scaledExons[String(allExons[i])] = 50 + Math.round((allExons[i] - first) * scale);
+                }
+                //console.log(scaledExons);
                 
                 // Scale the CDS coordinates
+                var scaledCDS = {};
                 for (var i in data["cdsCoord"]) {
-                    scaledCdsCoord[String(data["cdsCoord"][i])] = 50 + Math.round((data["cdsCoord"][i]-first) * scale);
-                    //console.log(data["cdsCoord"][i], first, data["cdsCoord"][i] - first);
+                    scaledCDS[String(data["cdsCoord"][i])] = 50 + Math.round((data["cdsCoord"][i] - first) * scale);
                 }
+                //console.log(scaledCDS);
                 
                 bricks = game.add.group();
                 var offsetTop = 50,
-                    brickHeight = 12;
+                    brickHeight = 12,
+                    n = 0;
                 
-                // Draw the exons
-                var endOfLastExon = 0;
-                for (var i = 0; i < transcripts.length; i++) {
-                    var t_id = transcripts[i],
-                        coordX = data["transcripts"][t_id]["exons"];
-                    for (var j in coordX) {
-                        var brickX = scaledExonCoord[String(coordX[j][0])],
-                            brickY = offsetTop + (i * 18),
-                            end = scaledExonCoord[String(coordX[j][1])];
-                        
-                        // Draw exon
-                        newBrick = game.add.sprite(brickX+((end-brickX)/2), brickY+(brickHeight/2), drawRect(brickHeight, end - brickX));
-                        newBrick.health = 1;
-                        game.physics.enable(newBrick, Phaser.Physics.ARCADE);
-                        newBrick.body.immovable = true;
-                        newBrick.anchor.set(0.5);
-                        bricks.add(newBrick);
-                        
-                        // Draw intron
-                        if (j > 0 && j < coordX.length) {
-                            newBrick = game.add.sprite(brickX+((endOfLastExon-brickX)/2), brickY+(brickHeight/2), drawRect(2, endOfLastExon - brickX, 0x000, 0x000));
-                            newBrick.health = 1;
-                            game.physics.enable(newBrick, Phaser.Physics.ARCADE);
-                            newBrick.body.immovable = true;
-                            newBrick.anchor.set(0.5);
-                            bricks.add(newBrick);
-                        }
-                        
-                        endOfLastExon = end;
-                    }
-                }
+                for (var t_id in transcripts) {
                 
-                // Draw the CDS
-                for (var i = 0; i < transcripts.length; i++) {
-                    var t_id = transcripts[i],
-                        coordX = data["transcripts"][t_id]["cds"];
-                    for (var j in coordX) {
-                        var brickX = scaledCdsCoord[String(coordX[j][0])],
-                            brickY = offsetTop + (i*18),
-                            end = scaledCdsCoord[String(coordX[j][1])];
-
-                        newBrick = game.add.sprite(brickX+((end-brickX)/2), brickY+(brickHeight/2), drawRect(brickHeight, end - brickX, lineColor=0x000, fillColor=0x51A351));
+                    // Draw the exons
+                    exons = transcripts[t_id]['exonBricks'];
+                    for (var i = 0; i < exons.length; i++) {
+                        var brickX1 = scaledExons[String(exons[i][0])],
+                            brickX2 = scaledExons[String(exons[i][1])],
+                            brickY = offsetTop + (n * 18);
+                        
+                        // Draw the exon brick
+                        newBrick = game.add.sprite(brickX1 + ((brickX2 - brickX1) / 2), brickY + (brickHeight / 2), drawRect(brickHeight, brickX2 - brickX1));
                         newBrick.health = 1;
                         game.physics.enable(newBrick, Phaser.Physics.ARCADE);
                         newBrick.body.immovable = true;
                         newBrick.anchor.set(0.5);
                         bricks.add(newBrick);
                     }
+                    
+                    
+                    // Draw the introns
+                    
+                    // Draw the CDS
+                    cds = transcripts[t_id]['cds'];
+                    for (var i = 0; i < cds.length; i++) {
+                        var brickX1 = scaledCDS[String(cds[i][0])],
+                            brickX2 = scaledCDS[String(cds[i][1])],
+                            brickY = offsetTop + (n * 18);
+                        
+                        // Draw the exon brick
+                        newBrick = game.add.sprite(brickX1 + ((brickX2 - brickX1) / 2), brickY + (brickHeight / 2), drawRect(brickHeight, brickX2 - brickX1, lineColor=0x000, fillColor=0x51A351));
+                        newBrick.health = 1;
+                        game.physics.enable(newBrick, Phaser.Physics.ARCADE);
+                        newBrick.body.immovable = true;
+                        newBrick.anchor.set(0.5);
+                        bricks.add(newBrick);
+                    }
+                    
+                    n++;
                 }
+                
             }
             
             function ballHitBrick(ball, brick) {
@@ -317,7 +354,7 @@
                 } else {
                     var randomAngle = Math.floor(Math.random() * (135 - 45) / 5) * 5 + 45;
                     var angleOfFire = Phaser.Math.degToRad(randomAngle);
-                    ball.body.velocity.set(250 * Math.cos(angleOfFire), -250 * Math.sin(angleOfFire));
+                    ball.body.velocity.set(350 * Math.cos(angleOfFire), -350 * Math.sin(angleOfFire));
                     console.log(randomAngle, angleOfFire);
                     console.log(ball.body.velocity);
                     playing = true;
