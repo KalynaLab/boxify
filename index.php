@@ -8,18 +8,25 @@
 <!--
     To-do:
         * Catch/Handle missing CDS
-        * Add coordinates tooltips (http://jsfiddle.net/m1erickson/yLBjM/, https://stackoverflow.com/questions/17064913/display-tooltip-in-canvas-graph, https://stackoverflow.com/questions/30795139/displaying-tooltips-on-mouse-hover-on-shapes-positioncoordinates-on-canvas?rq=1) 
-        * Export as (vector) image
+        * Add coordinates tooltips (http://jsfiddle.net/m1erickson/yLBjM/, https://stackoverflow.com/questions/17064913/display-tooltip-in-canvas-graph, https://stackoverflow.com/questions/30795139/displaying-tooltips-on-mouse-hover-on-shapes-positioncoordinates-on-canvas?rq=1)
+        * Export as (vector) image (https://codepen.io/blustemy/pen/PbRNjM?editors=1010) - 10.10.2019 the ctx.save() and ctx.restore() thing break canvas-getsvg for some reason
+        * SVG stuff: Figure out why the transcript IDs are not in their proper place
+        * More SVG stuff: Why isn't the thing simply replaced?
         * Add form (search, primers, colors, etc)
         * (Multiple) Primer search
+        * Add virtual gel picture
         * Download options (genomic sequence, transcript sequence, PCR products, etc.)
         * Create scripts for DB table generation
         * Add multiple organisms
         * Add gene search autocomplete (https://www.codexworld.com/autocomplete-textbox-using-jquery-php-mysql/)
-        * Need to "hide" the genomic and spliced sequences in the HTML, because the cookie gets to big otherwise
+        * Need to "hide" the genomic and spliced sequences in the HTML, because the cookie gets to big otherwise - 10-10-2019, moved away from the cookie, so the hidden seq element is no longer necessary.
         * Add reset settings option
-        * Check cookie size for "big" genes (GRP7 - AT2G21660)
-	* Add breakout :D
+        * Maybe make color palette presets
+        * Check cookie size for "big" genes (GRP7 - AT2G21660, ATM - AT3G48190) - 10-10-2019, moved away from cookies and store the json in the html instead.
+        * Add gene name search option
+	      * Add breakout :D
+        * Add option for reversal of antisense models
+        * Make sure that the sequences are always in the coding direction
 -->
 
 <html>
@@ -32,7 +39,7 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
         <style>
             /* Prevent text selection of draggable items */
-            [draggable] { 
+            [draggable] {
                 user-select: none;
             }
             #select-transcripts {
@@ -44,7 +51,7 @@
                 font-family: sans-serif;
                 font-size: 12px;
             }
-            #sticky-sidebar { 
+            #sticky-sidebar {
                 min-height: 100vh;
             }
             #main {
@@ -52,7 +59,7 @@
                 white-space: nowrap;
             }
             #error_messages { display: none; }
-            
+
             #settings { display: none; }
             #settings p { font-size: 0.9rem; }
             .settings-header { cursor: pointer; }
@@ -60,7 +67,7 @@
 
             #seq { display: none; }
             .is-breakable { word-break: break-word; }
-            
+
             #size { width: 100%; }
 
             .color-form { margin-bottom: 0rem; }
@@ -81,7 +88,7 @@
 
                             <div class="form-group">
                                 <label for="gene" class="control-label">Gene</label>
-                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860" value="AT3G61860" onkeyup="this.value = this.value.toUpperCase();">
+                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860" value="AT1G01070" onkeyup="this.value = this.value.toUpperCase();">
                             </div>
 
                             <div id="error_messages" class="alert alert-danger"></div>
@@ -138,7 +145,12 @@
                         Your browser does not support HTML5 canvas.
                     </canvas>
 
-                    <pre id="seq"></pre>
+                    <div id="svg-image"></div>
+                    <div id="drawing-data" ></div>
+
+                    <p>
+                        <a href="#" class="link-download">Download displayed SVG</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -147,7 +159,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
         <script src="assets/js/js.cookie.js"></script>
-
+        <script src="assets/js/canvas-getsvg.js"></script>
         <script type="text/javascript">
 
             function boxify(size, data, transcripts, exonColor="#428bca", cdsColor="#51A351") {
@@ -170,7 +182,6 @@
                 }
                 data["scaleFactor"] = scale;
                 data["scaledCdsCoord"] = scaledCdsCoord;
-                //console.log(scaledCdsCoord);
 
                 var nT = transcripts.length;
                 window.addEventListener("load", eventWindowLoaded(), false);
@@ -205,10 +216,9 @@
                     var canvas = document.getElementById("boxify");
                     canvas.width = canvasWidth;
                     canvas.height = canvasHeight;
+                    var canvasSVGContext = new CanvasSVG.Deferred();
+                    canvasSVGContext.wrapCanvas(canvas);
                     var ctx = canvas.getContext("2d");
-
-                    ctx.fillStyle = "white";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                     var cT = 0;
                     for (var i = 0; i < transcripts.length; i++) {
@@ -224,7 +234,12 @@
                         cT += 1
                     }
 
-                    function drawTranscript(t_id, coord, scaledCoord, strand, vOffset, color="#428bca") {
+                    // Generate the SVG image
+                    $("#svg-image").html(ctx.getSVG());
+                    //document.getElementById("svg-image").appendChild(ctx.getSVG());
+                    $("svg").attr("xmlns", "http://www.w3.org/2000/svg");
+
+                    function drawTranscript(t_id, coord, scaledCoord, strand, vOffset, color="#428BCA") {
 
                         ctx.font = "12px sans-serif";
                         ctx.fillStyle = "black";
@@ -233,10 +248,10 @@
 
                         ctx.fillStyle = color;
                         ctx.strokeStyle = "rgba(1, 1, 1, 0)";
-                        ctx.save();
+                        //ctx.save();
 
                         var endOfLastExon = 0;
-                        for (var i in coord) { 
+                        for (var i in coord) {
                             var start = scaledCoord[String(coord[i][0])],
                                 end = scaledCoord[String(coord[i][1])];
 
@@ -267,7 +282,7 @@
                                 ctx.quadraticCurveTo(endOfLastExon, vOffset+6, start, vOffset+6);
                                 ctx.stroke();
                                 ctx.closePath();
-                                ctx.restore();
+                                //ctx.restore();
                             }
 
                             endOfLastExon = end;
@@ -279,9 +294,9 @@
 
                         ctx.fillStyle = color;
                         ctx.strokeStyle = "rgba(1, 1, 1, 0)";
-                        ctx.save();
+                        //ctx.save();
 
-                        for (var i in coordX) { 
+                        for (var i in coordX) {
                             var start = scaledCoordX[String(coordX[i][0])],
                                 end = scaledCoordX[String(coordX[i][1])];
 
@@ -306,7 +321,6 @@
 
                     //Cookies.set('drawing-data', data);
                     //console.log(Cookies.getJSON('drawing-data'));
-
                     //console.log(data);
 
                     if (data["okay"]) {
@@ -319,7 +333,7 @@
 
                         // Save genomic sequence in html
                         $('#seq').append('<span id="genomic">'+seq+'</span>');
-                        delete data["gene"]["seq"];
+                        //delete data["gene"]["seq"];
 
                         if (strand == '-') { seq = seq.split('').reverse().join(''); }
                         for (var i = 0; i < transcripts.length; i++) {
@@ -333,17 +347,32 @@
                         		spliced_seq += seq.slice(start-gene_start, (end-gene_start)+1);
                         	}
 
-                        	if (strand == '+') {
+                        	/*if (strand == '+') {
                         		$('#seq').append('<span id="'+t_id+'" class="spliced_seq">'+spliced_seq+'</span><br>');
                         	} else {
                         		$('#seq').append('<span id="'+t_id+'" class="spliced_seq">'+spliced_seq.split('').reverse().join('')+'</span><br>');
-                        	}
+                        	}*/
+
+                          // Append to json drawing-data
+                          if (strand == '+') {
+                            data["transcripts"][t_id]["seq"] = spliced_seq;
+                          } else {
+                            data["transcripts"][t_id]["seq"] = spliced_seq.split('').reverse().join('');
+                          }
 
                         }
 
+                        //console.log(scaledCdsCoord);
+
+                        //delete data["exonCoord"];
+                        //delete data["cdsCoord"];
+
                         // Store cookie for re-drawing
                         // Maybe implement some checks for cookie size (should not exceed 4KB)
-                        Cookies.set('drawing-data', data);
+                        //Cookies.set('drawing-data', data);
+                        $('#drawing-data').data(data);
+
+                        console.log($('#drawing-data').data());
 
                         // Draw models
                         boxify(parseInt($('#size').val()), data, transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
@@ -437,7 +466,22 @@
                 });
 
                 // Redraw
-                boxify(parseInt($('#size').val()), Cookies.getJSON('drawing-data'), transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
+                //boxify(parseInt($('#size').val()), Cookies.getJSON('drawing-data'), transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
+                boxify(parseInt($('#size').val()), $('#drawing-data').data(), transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
+            });
+
+            // Save as SVG
+            document.querySelector(".link-download").addEventListener("click", (evt) => {
+                const svgContent = document.getElementById("svg-image").innerHTML,
+                      blob = new Blob([svgContent], {
+                          type: "image/svg+xml"
+                      }),
+                      url = window.URL.createObjectURL(blob),
+                      link = evt.target;
+
+                link.target = "_blank";
+                link.download = $('#form_gene').val()+".svg";
+                link.href = url;
             });
 
         </script>
