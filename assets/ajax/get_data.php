@@ -84,8 +84,8 @@
 					array_push($cdsCoord, (int)$row["start"], (int)$row["end"]);
 				}
 			} else {
-				echo json_encode(array( "okay" => False, "messages" => "Error fetching CDS." ));
-				exit;
+				//echo json_encode(array( "okay" => False, "messages" => "Error fetching CDS." ));
+				//exit;
 			}
 
 		} catch (PDOException $ex) {

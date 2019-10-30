@@ -7,26 +7,36 @@
 
 <!--
     To-do:
-        * Catch/Handle missing CDS
         * Add coordinates tooltips (http://jsfiddle.net/m1erickson/yLBjM/, https://stackoverflow.com/questions/17064913/display-tooltip-in-canvas-graph, https://stackoverflow.com/questions/30795139/displaying-tooltips-on-mouse-hover-on-shapes-positioncoordinates-on-canvas?rq=1)
         * Export as (vector) image (https://codepen.io/blustemy/pen/PbRNjM?editors=1010) - 10.10.2019 the ctx.save() and ctx.restore() thing break canvas-getsvg for some reason
         * SVG stuff: Figure out why the transcript IDs are not in their proper place
-        * More SVG stuff: Why isn't the thing simply replaced?
+        * More SVG stuff: Why isn't the thing simply replaced? - 10-10-2019 ctx.clearRect seems to be doing the thing.
+        * Add download button first after the transcripts have been drawn
         * Add form (search, primers, colors, etc)
-        * (Multiple) Primer search
+        * (Multiple) Primer search - 22-10-2019, working for up to 3 primer pairs
+        * Add primer rectangles - 22-10-2019, primer bars are added. Scaled to size, which means they are tiny for ATM and other giant transcripts
+        * Add primer bar "overlay" (idea from Stefan)
         * Add virtual gel picture
         * Download options (genomic sequence, transcript sequence, PCR products, etc.)
         * Create scripts for DB table generation
         * Add multiple organisms
         * Add gene search autocomplete (https://www.codexworld.com/autocomplete-textbox-using-jquery-php-mysql/)
-        * Need to "hide" the genomic and spliced sequences in the HTML, because the cookie gets to big otherwise - 10-10-2019, moved away from the cookie, so the hidden seq element is no longer necessary.
         * Add reset settings option
         * Maybe make color palette presets
-        * Check cookie size for "big" genes (GRP7 - AT2G21660, ATM - AT3G48190) - 10-10-2019, moved away from cookies and store the json in the html instead.
         * Add gene name search option
-	      * Add breakout :D
+	      * Add breakout :D - Fix cookie
         * Add option for reversal of antisense models
         * Make sure that the sequences are always in the coding direction
+        * Dark mode ^^ (https://www.developerdrive.com/css-dark-mode/)
+        * "Coordinate bars"
+        * Add support for split primers display
+        * Add scrolling genomic sequence
+
+    Done:
+        * Catch/Handle missing CDS - 25-10-2019 That was easy, just don't bother to generate the error I added myself ><
+        * Need to "hide" the genomic and spliced sequences in the HTML, because the cookie gets to big otherwise - 10-10-2019, moved away from the cookie, so the hidden seq element is no longer necessary.
+        * Check cookie size for "big" genes (GRP7 - AT2G21660, ATM - AT3G48190) - 10-10-2019, moved away from cookies and store the json in the html instead.
+        * Add hide CDS option - 25-10-2019, added some toggle
 -->
 
 <html>
@@ -37,6 +47,7 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <title>Boxify</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="assets/css/toggle_switch.css">
         <style>
             /* Prevent text selection of draggable items */
             [draggable] {
@@ -65,9 +76,6 @@
             .settings-header { cursor: pointer; }
             .settings-content { display: none; }
 
-            #seq { display: none; }
-            .is-breakable { word-break: break-word; }
-
             #size { width: 100%; }
 
             .color-form { margin-bottom: 0rem; }
@@ -75,6 +83,69 @@
                 width: 23px;
                 float: right;
             }
+
+            #genomic-seq {
+                overflow-x: hidden;
+                margin-left: 125px;
+                font-family: Courier New;
+                font-size: 14px;
+                display: none;
+            }
+
+            .caret { cursor: pointer; }
+            #primer-search {
+                display: none;
+            }
+
+            .PCR {
+                display: none;
+                font-size: 0.9em;
+                margin-top: 1em;
+            }
+
+            .add-primer-button {
+                cursor: pointer;
+            }
+            .vertical-align {
+                display: flex;
+                align-items: center;
+            }
+            .btn-circle {
+                width: 30px;
+                height: 30px;
+                padding: 0px 0px;
+                border-radius: 15px;
+                text-align: center;
+                font-size: 1.5em;
+                font-weight: bold;
+                line-height: 0;
+                margin-right: 0.25em;
+            }
+
+            .given-primers {
+                display: none;
+                padding: 0.5em 0;
+                border-top: 5px solid black;
+            }
+            .pcr-info { width: 100%; }
+            .fragment {
+                font-size: 0.9em;
+                word-break: break-all;
+                white-space: normal;
+                font-family: Courier New;
+                max-height: 5em;
+                overflow-y: auto;
+                display: none;
+            }
+
+            /* Scroll bar customisation */
+            ::-webkit-scrollbar { width: 10px; }
+            ::-webkit-scrollbar-track { border-radius: 5px; }
+            ::-webkit-scrollbar-thumb {
+                background: gray;
+                border-radius: 5px;
+            }
+
         </style>
     </head>
     <body>
@@ -88,7 +159,7 @@
 
                             <div class="form-group">
                                 <label for="gene" class="control-label">Gene</label>
-                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860" value="AT1G01070" onkeyup="this.value = this.value.toUpperCase();">
+                                <input type="text" class="form-control" name="gene" id="form_gene" placeholder="AT3G61860" value="AT3G61860" onkeyup="this.value = this.value.toUpperCase();">
                             </div>
 
                             <div id="error_messages" class="alert alert-danger"></div>
@@ -115,8 +186,16 @@
                                 <h5>Draw size</h5>
                                 <p>Drag the slider to adjust draw size of the transcript models.</p>
                                 <div class="form-group">
-                                    <label for="drawSize"><span id="slideSize">600</span>px</label>
-                                    <input type="range" id="size" name="drawSize"  min="600" value="600" max="1400" step="50" oninput="updateSize(value)">
+                                    <label for="drawSize"><span id="slideSize">800</span>px</label>
+                                    <input type="range" id="size" name="drawSize"  min="600" value="800" max="1400" step="50" oninput="updateSize(value)">
+                                </div>
+
+                                <div class="form-group">
+                                    <span class="align-text-bottom">Draw CDS </span>
+                                    <label class="switch" id="draw-CDS" state="on">
+                                        <input type="checkbox" checked>
+                                        <span class="slider round"></span>
+                                    </label>
                                 </div>
 
                                 <h5>Colors</h5>
@@ -136,7 +215,13 @@
 
 
                             <p>Click the "Redraw" button to apply the changes.</p>
-                            <button type="button" class="btn" id="redraw">Redraw</button>
+                            <button type="button" class="btn" id="redraw">Update</button>
+                        </div>
+
+                        <div id="downloads" class="pt-2" hidden>
+                            <hr />
+                            <a href="#" class="stretched-link"><img src="assets/img/svg-logo-v.png" alt="Download SVG" class="download-svg"/></a>
+                            <a href="#" class="download-png">Download PNG</a>
                         </div>
                     </div>
                 </div>
@@ -144,13 +229,45 @@
                     <canvas id="boxify">
                         Your browser does not support HTML5 canvas.
                     </canvas>
+                    <div id="genomic-seq"></div>
 
-                    <div id="svg-image"></div>
-                    <div id="drawing-data" ></div>
+                    <div class="row">
+                        <div class="col-xl-4 col-lg-6 col-sm-12 PCR">
+                            <div class="form-group vertical-align add-primer-button">
+                                <button type="button" class="btn btn-primary btn-circle">+</button>
+                                Add primers
+                            </div>
 
-                    <p>
-                        <a href="#" class="link-download">Download displayed SVG</a>
-                    </p>
+                            <div class="enter-form-here"></div>
+                            <div class="given-primers" style="border-color: #d9534f;"></div>
+                            <div class="pcr-results"></div>
+
+                        </div>
+                        <div class="col-xl-4 col-lg-6 col-sm-12 PCR">
+                            <div class="form-group vertical-align add-primer-button">
+                                <button type="button" class="btn btn-primary btn-circle">+</button>
+                                Add more primers
+                            </div>
+
+                            <div class="enter-form-here"></div>
+                            <div class="given-primers" style="border-color: #51a351;"></div>
+                            <div class="pcr-results"></div>
+                        </div>
+                        <div class="col-xl-4 col-lg-6 col-sm-12 PCR">
+                            <div class="form-group vertical-align add-primer-button">
+                                <button type="button" class="btn btn-primary btn-circle">+</button>
+                                Add more primers
+                            </div>
+
+                            <div class="enter-form-here"></div>
+                            <div class="given-primers" style="border-color: #428bca;"></div>
+                            <div class="pcr-results"></div>
+                        </div>
+                    </div>
+
+                    <div id="svg-image" type="hidden"></div>
+                    <div id="drawing-data"></div>
+
                 </div>
             </div>
         </div>
@@ -159,10 +276,27 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
         <script src="assets/js/js.cookie.js"></script>
+        <script src="assets/js/functions.js"></script>
         <script src="assets/js/canvas-getsvg.js"></script>
         <script type="text/javascript">
 
-            function boxify(size, data, transcripts, exonColor="#428bca", cdsColor="#51A351") {
+            /* Toggle switch */
+            $(document).on('click', '.switch', function(e) {
+                if ($(e.target).is("input")) {
+                    $(this).attr("state", ($(this).attr("state") === "on" ? "off" : "on"));
+                }
+            });
+
+            function reset_PCR() {
+                $('.given-primers').empty().hide();
+                $('.pcr-results').empty();
+                $('.add-primer-button').show();
+                $('.PCR').hide();
+            }
+
+            function boxify(size, data, transcripts, draw_CDS=true, exonColor="#428bca", cdsColor="#51A351") {
+
+                $('#genomic-seq').css("width", $('#size').val()-100);
 
                 var scale = (size-100) / (data["exonCoord"][data["exonCoord"].length - 1] - data["exonCoord"][0]),
                     first = data["exonCoord"][0],
@@ -174,7 +308,6 @@
                     scaledExonCoord[String(data["exonCoord"][i])] = 125 + Math.round((data["exonCoord"][i]-first) * scale);
                 }
                 data["scaledExonCoord"] = scaledExonCoord;
-                //console.log(scaledExonCoord);
 
                 // Scale the CDS coordinates
                 for (var i in data["cdsCoord"]) {
@@ -198,7 +331,7 @@
                 function eventWindowLoaded () {
                     var borderMargin = 25,
                         canvasWidth = size+(borderMargin*2),
-                        canvasHeight = (nT*18)+(borderMargin*2)-6;
+                        canvasHeight = (nT*18)+(data["primers"].length*10)+(borderMargin*2)-6;
                     canvasApp(borderMargin, canvasWidth, canvasHeight);
                 }
 
@@ -219,6 +352,7 @@
                     var canvasSVGContext = new CanvasSVG.Deferred();
                     canvasSVGContext.wrapCanvas(canvas);
                     var ctx = canvas.getContext("2d");
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                     var cT = 0;
                     for (var i = 0; i < transcripts.length; i++) {
@@ -227,17 +361,22 @@
                         cT += 1;
                     }
 
-                    cT = 0;
-                    for (var i = 0; i < transcripts.length; i++) {
-                        var t_id = transcripts[i];
-                        drawCDS(data["transcripts"][t_id]["cds"], data["scaledCdsCoord"], borderMargin+(cT*18), cdsColor);
-                        cT += 1
+                    if (draw_CDS) {
+                        cT = 0;
+                        for (var i = 0; i < transcripts.length; i++) {
+                            var t_id = transcripts[i];
+                            drawCDS(data["transcripts"][t_id]["cds"], data["scaledCdsCoord"], borderMargin+(cT*18), cdsColor);
+                            cT += 1
+                        }
                     }
 
-                    // Generate the SVG image
-                    $("#svg-image").html(ctx.getSVG());
-                    //document.getElementById("svg-image").appendChild(ctx.getSVG());
-                    $("svg").attr("xmlns", "http://www.w3.org/2000/svg");
+                    var vertical_offset = borderMargin+(cT*18);
+                    var primers = data["primers"];
+                    var colors = $('.given-primers').map(function() { return $(this).css("border-color");}).get();
+
+                    for (var i = 0; i < primers.length; i++) {
+                        drawPrimers(primers[i]["fwd"], primers[i]["rev"], scale, vertical_offset+(i*10), colors[i]);
+                    }
 
                     function drawTranscript(t_id, coord, scaledCoord, strand, vOffset, color="#428BCA") {
 
@@ -305,11 +444,43 @@
 
                         }
                     }
+
+                    function drawPrimers(fwd, rev, scaleFactor, vOffsetX, color) {
+                        ctx.fillStyle = color;
+                        ctx.fillRect(125 + fwd[0]*scaleFactor, vOffsetX, (fwd[1]-fwd[0])*scaleFactor, 5)
+                        ctx.fillRect(125 + rev[0]*scaleFactor, vOffsetX, (rev[1]-rev[0])*scaleFactor, 5)
+                    }
                 }
+            }
+
+            function primer_search(fwd, rev, transcripts, drawing_data) {
+
+                var rx = new RegExp(fwd+".*?(?="+revcom(rev)+")"),
+                    fragments = [];
+
+                // Add the genomic DNA sequence
+                trs = Array.from(transcripts);
+                trs.unshift("Genomic DNA");
+                drawing_data["transcripts"]["Genomic DNA"] = { "seq": drawing_data["gene"]["seq"] };
+
+                // Look for fragments
+                for (let t_id of trs) {
+                    if (rx.test(drawing_data["transcripts"][t_id]["seq"])) {
+                        m = drawing_data["transcripts"][t_id]["seq"].match(rx);
+                        fragments[t_id] = { "product": m[0]+revcom(rev), "offset": m["index"], "len": (m[0]+revcom(rev)).length }
+                    } else {
+                        fragments[t_id] = { "product": "No product found", offset: -1, "len": "#NA" }
+                    }
+                }
+
+                return fragments
             }
 
             $(document).on('click', '#form_submit', function(e) {
                 e.preventDefault();
+
+                // Reset stuff
+                reset_PCR();
 
                 var g_id = $('#form_gene').val();
                 console.log(g_id);
@@ -321,9 +492,11 @@
 
                     //Cookies.set('drawing-data', data);
                     //console.log(Cookies.getJSON('drawing-data'));
-                    //console.log(data);
+                    console.log(data);
 
                     if (data["okay"]) {
+
+                        data["gene"]["gene_id"] = g_id;
 
                         // Get spliced sequences
                         var transcripts = Object.keys(data["transcripts"]),
@@ -331,9 +504,8 @@
                         	strand = data["gene"]["strand"],
                         	seq = data["gene"]["seq"];
 
-                        // Save genomic sequence in html
-                        $('#seq').append('<span id="genomic">'+seq+'</span>');
-                        //delete data["gene"]["seq"];
+                        // Add the genomic sequence below the canvas
+                        $('#genomic-seq').html(seq);
 
                         if (strand == '-') { seq = seq.split('').reverse().join(''); }
                         for (var i = 0; i < transcripts.length; i++) {
@@ -347,12 +519,6 @@
                         		spliced_seq += seq.slice(start-gene_start, (end-gene_start)+1);
                         	}
 
-                        	/*if (strand == '+') {
-                        		$('#seq').append('<span id="'+t_id+'" class="spliced_seq">'+spliced_seq+'</span><br>');
-                        	} else {
-                        		$('#seq').append('<span id="'+t_id+'" class="spliced_seq">'+spliced_seq.split('').reverse().join('')+'</span><br>');
-                        	}*/
-
                           // Append to json drawing-data
                           if (strand == '+') {
                             data["transcripts"][t_id]["seq"] = spliced_seq;
@@ -362,20 +528,18 @@
 
                         }
 
-                        //console.log(scaledCdsCoord);
-
-                        //delete data["exonCoord"];
-                        //delete data["cdsCoord"];
-
                         // Store cookie for re-drawing
                         // Maybe implement some checks for cookie size (should not exceed 4KB)
                         //Cookies.set('drawing-data', data);
+
+                        // Add an empty primer array for later storage
+                        data["primers"] = [];
+
+                        // Store the drawing data in a html element
                         $('#drawing-data').data(data);
 
-                        console.log($('#drawing-data').data());
-
                         // Draw models
-                        boxify(parseInt($('#size').val()), data, transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
+                        boxify(parseInt($('#size').val()), data, transcripts, ($("#draw-CDS").attr("state") === "on" ? true : false), $('#transcriptColor').val(), $('#cdsColor').val());
 
                         // Add transcripts to settings
                         $('#select-transcripts').html("");
@@ -387,6 +551,7 @@
                         // Show settings
                         $('#error_messages').hide();
                         $('#settings').show();
+                        $('.PCR').first().show();
 
                     } else {
                         $('#error_messages').html("<strong>Error!</strong> "+data["messages"]);
@@ -453,7 +618,7 @@
             // Hide/Display settings
             $(document).on('click', '.settings-header', function() {
                 $('.settings-content').toggle();
-                $('.caret').html(($('.caret').html().charCodeAt(0) === 9660 ? "&#9650;" : "&#9660;"));
+                $(this).find('.caret').html(($('.caret').html().charCodeAt(0) === 9660 ? "&#9650;" : "&#9660;"));
             });
 
             // Redraw everything
@@ -467,21 +632,133 @@
 
                 // Redraw
                 //boxify(parseInt($('#size').val()), Cookies.getJSON('drawing-data'), transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
-                boxify(parseInt($('#size').val()), $('#drawing-data').data(), transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
+                boxify(parseInt($('#size').val()), $('#drawing-data').data(), transcripts, ($("#draw-CDS").attr("state") === "on" ? true : false), $('#transcriptColor').val(), $('#cdsColor').val());
             });
 
+            /* All the primer stuff */
+
+            // Primer form variable
+            var primer_search_form = "<form action='' method='POST'> \
+                <div class='form-group'> \
+                    <label for='fwd-primer' class='pcr-primer-label'>Forward primer</label> \
+                    <input type='text' class='form-control' id='fwd-primer' value='GCGAATTAAGATAAAGATGAGG' onkeyup='this.value = this.value.toUpperCase();'> \
+                </div> \
+                <div class='form-group'> \
+                    <label for='rev-primer' class='pcr-primer-label'>Reverse primer</label> \
+                    <input type='text' class='form-control' id='rev-primer' value='GGAAAATTGTCGAGTTTGCG' onkeyup='this.value = this.value.toUpperCase();'> \
+                </div> \
+                <button type='submit' class='btn btn-primary' id='primer-search-submit'>Search</button> \
+            </form>";
+
+            $(document).on('click', '.add-primer-button', function(e) {
+                $(this).siblings('.enter-form-here').html(primer_search_form);
+                $(this).hide();
+            });
+
+            $(document).on('click', '#primer-search-submit', function(e) {
+
+                // Add primers to canvas
+                // Add result PCR result download
+
+                e.preventDefault();
+
+                var fwd = $('#fwd-primer').val(),
+                    rev = $('#rev-primer').val();
+
+                //$(this).parents(".PCR").prepend("<div class='used-primer'>Reverse: <span class='pcr-product'>"+rev+"</span></div>");
+                //$(this).parents(".PCR").prepend("<div class='used-primer'>Forward: <span class='pcr-product'>"+fwd+"</span></div>");
+                $(this).parents(".PCR").find(".given-primers").append("<div class='used-primer'>Forward: "+fwd+"</div>");
+                $(this).parents(".PCR").find(".given-primers").append("<div class='used-primer'>Reverse: "+rev+"</div>");
+                $(this).parents(".PCR").find(".given-primers").show();
+
+                // Select the active transcripts
+                var transcripts = [];
+                $('#select-transcripts').find('.list-group-item-dark').each(function() {
+                    transcripts.push($(this).html());
+                });
+
+                $(this).parents(".PCR").find(".pcr-results").html('');
+                var drawing_data = $('#drawing-data').data();
+                var fragments = primer_search($('#fwd-primer').val(), $('#rev-primer').val(), transcripts, drawing_data);
+
+                for (t_id in fragments) {
+                    $(this).parents(".PCR").find(".pcr-results").append("<div class='pcr-info'> \
+                        "+t_id+" \
+                        (<span class='text-muted'>"+fragments[t_id]["len"]+"</span>) \
+                        <span class='caret d-inline-block align-top'>&#9660;</span> \
+                        <p class='fragment'>"+fragments[t_id]["product"]+"</p> \
+                    </div>");
+                }
+
+                // Store the primer location data
+                // 125 + Math.round((data["exonCoord"][i]-first) * scale
+                if (drawing_data["gene"]["strand"] == '+') {
+                    var abs_start = fragments["Genomic DNA"]["offset"];
+                    var primer_pos = {
+                        "fwd": [ abs_start, abs_start+fwd.length ],
+                        "rev": [ abs_start+fragments["Genomic DNA"]["len"]-rev.length, abs_start+fragments["Genomic DNA"]["len"] ]
+                    }
+                } else {
+                    //var abs_start = drawing_data["gene"]["end"]-(fragments["Genomic DNA"]["offset"]+fragments["Genomic DNA"]["len"]);
+                    var abs_start = drawing_data["gene"]["seq"].length - (fragments["Genomic DNA"]["offset"]+fragments["Genomic DNA"]["len"]);
+                    var primer_pos = {
+                        "fwd": [ abs_start, abs_start+rev.length ],
+                        "rev": [ abs_start+(fragments["Genomic DNA"]["len"]-rev.length), abs_start+fragments["Genomic DNA"]["len"] ]
+                    }
+                }
+
+                // Add the primer positions to the drawing data
+                drawing_data["primers"].push(primer_pos);
+                $("#drawing-data").data(drawing_data);
+
+                // Redraw the transcripts with the primers this time
+                boxify(parseInt($('#size').val()), drawing_data, transcripts, ($("#draw-CDS").attr("state") === "on" ? true : false), $('#transcriptColor').val(), $('#cdsColor').val());
+
+                // Get rid of the form again and display the next primer search
+                $(this).parents().next(".PCR").show();
+                $(this).parent().parent('.enter-form-here').html('');
+
+            });
+
+            // Hide/Display settings
+            $(document).on('click', '.pcr-info .caret', function() {
+                $(this).parent().find('.fragment').toggle();
+                $(this).html(($(this).html().charCodeAt(0) === 9660 ? "&#9650;" : "&#9660;"));
+            });
+
+
+            // Save as PNG
+            document.querySelector(".download-png").addEventListener("click", (evt) => {
+                var canvas = document.getElementById("boxify");
+                link = evt.target;
+                link.href = canvas.toDataURL();
+                link.download = $('#form_gene').val()+".png"; // Change to drawing-date gene_id
+            });
+
+            // Save as PDF
+
             // Save as SVG
-            document.querySelector(".link-download").addEventListener("click", (evt) => {
+            document.querySelector(".download-svg").addEventListener("click", (evt) => {
+
+                // Generate the SVG image
+                var canvas = document.getElementById("boxify");
+                var ctx = canvas.getContext("2d");
+                $("#svg-image").html(ctx.getSVG());
+                $("svg").attr("xmlns", "http://www.w3.org/2000/svg");
+
                 const svgContent = document.getElementById("svg-image").innerHTML,
                       blob = new Blob([svgContent], {
                           type: "image/svg+xml"
                       }),
                       url = window.URL.createObjectURL(blob),
-                      link = evt.target;
+                      link = evt.target.parentElement;
 
                 link.target = "_blank";
-                link.download = $('#form_gene').val()+".svg";
+                link.download = $('#form_gene').val()+".svg"; // Change to drawing-data gene_id
                 link.href = url;
+
+                // Remove it again
+                $("#svg-image").html('');
             });
 
         </script>
