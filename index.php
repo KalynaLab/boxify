@@ -215,12 +215,13 @@
 
 
                             <p>Click the "Redraw" button to apply the changes.</p>
-                            <button type="button" class="btn" id="redraw">Update</button>
+                            <button type="button" class="btn" id="redraw">Redraw</button>
                         </div>
 
-                        <div id="downloads" class="pt-2" hidden>
+                        <div id="downloads" class="pt-2">
                             <hr />
-                            <a href="#" class="stretched-link"><img src="assets/img/svg-logo-v.png" alt="Download SVG" class="download-svg"/></a>
+                            <a href="#" class="download-svg">Download SVG</a>
+                            <!-- <a href="#" class="stretched-link"><img src="assets/img/svg_logo_240px.png" alt="Download SVG" class="download-svg"/></a> -->
                             <a href="#" class="download-png">Download PNG</a>
                         </div>
                     </div>
@@ -265,7 +266,7 @@
                         </div>
                     </div>
 
-                    <div id="svg-image" type="hidden"></div>
+                    <div id="svg-image"></div>
                     <div id="drawing-data"></div>
 
                 </div>
@@ -751,11 +752,12 @@
                           type: "image/svg+xml"
                       }),
                       url = window.URL.createObjectURL(blob),
-                      link = evt.target.parentElement;
+                      link = evt.target;//.parentElement;
 
                 link.target = "_blank";
                 link.download = $('#form_gene').val()+".svg"; // Change to drawing-data gene_id
                 link.href = url;
+                //console.log(link.download, url);
 
                 // Remove it again
                 $("#svg-image").html('');
