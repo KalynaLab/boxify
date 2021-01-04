@@ -48,105 +48,7 @@
         <title>Boxify</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
         <link rel="stylesheet" href="assets/css/toggle_switch.css">
-        <style>
-            /* Prevent text selection of draggable items */
-            [draggable] {
-                user-select: none;
-            }
-            #select-transcripts {
-                width: 100%;
-                margin-bottom: 1rem;
-            }
-            #select-transcripts .list-group-item {
-                padding: .25rem .75rem;
-                font-family: sans-serif;
-                font-size: 12px;
-            }
-            #sticky-sidebar {
-                min-height: 100vh;
-            }
-            #main {
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-            #error_messages { display: none; }
-
-            #settings { display: none; }
-            #settings p { font-size: 0.9rem; }
-            .settings-header { cursor: pointer; }
-            .settings-content { display: none; }
-
-            #size { width: 100%; }
-
-            .color-form { margin-bottom: 0rem; }
-            input[type="color"] {
-                width: 23px;
-                float: right;
-            }
-
-            #genomic-seq {
-                overflow-x: hidden;
-                margin-left: 125px;
-                font-family: Courier New;
-                font-size: 14px;
-                display: none;
-            }
-
-            .caret { cursor: pointer; }
-            #primer-search {
-                display: none;
-            }
-
-            .PCR {
-                display: none;
-                font-size: 0.9em;
-                margin-top: 1em;
-            }
-
-            .add-primer-button {
-                cursor: pointer;
-            }
-            .vertical-align {
-                display: flex;
-                align-items: center;
-            }
-            .btn-circle {
-                width: 30px;
-                height: 30px;
-                padding: 0px 0px;
-                border-radius: 15px;
-                text-align: center;
-                font-size: 1.5em;
-                font-weight: bold;
-                line-height: 0;
-                margin-right: 0.25em;
-            }
-
-            .given-primers {
-                display: none;
-                padding: 0.5em 0;
-                border-top: 5px solid black;
-            }
-            .pcr-info { width: 100%; }
-            .fragment {
-                font-size: 0.9em;
-                word-break: break-all;
-                white-space: normal;
-                font-family: Courier New;
-                max-height: 5em;
-                overflow-y: auto;
-                display: none;
-            }
-
-            /* Scroll bar customisation */
-            ::-webkit-scrollbar { width: 10px; }
-            ::-webkit-scrollbar-track { border-radius: 5px; }
-            ::-webkit-scrollbar-thumb {
-                background: gray;
-                border-radius: 5px;
-            }
-
-        </style>
+        <link rel="stylesheet" href="assets/css/style.css">
     </head>
     <body>
 
@@ -553,6 +455,7 @@
                         $('#error_messages').hide();
                         $('#settings').show();
                         $('.PCR').first().show();
+                        $('#downloads').show();
 
                     } else {
                         $('#error_messages').html("<strong>Error!</strong> "+data["messages"]);
