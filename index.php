@@ -123,9 +123,9 @@
 
                         <div id="downloads" class="pt-2">
                             <hr />
-                            <a href="#" class="download-svg"><i class="bi-file-arrow-down"></i> SVG</a>
-                            <!-- <a href="#" class="stretched-link"><img src="assets/img/svg_logo_240px.png" alt="Download SVG" class="download-svg"/></a> -->
-                            <a href="#" class="download-png"><i class="bi-file-arrow-down"></i> PNG</a>
+                            <a href="#" id="download-svg"><i class="bi-file-arrow-down"></i>SVG</a>
+                            <a href="#" id="download-png"><i class="bi-file-arrow-down"></i>PNG</a>
+                            <a href="#" id="download-pcr"><i class="bi-file-arrow-down"></i>PCR result</a>
                         </div>
                     </div>
                 </div>
@@ -187,6 +187,9 @@
         <script src="assets/js/functions.js"></script>
         <script src="assets/js/canvas-getsvg.js"></script>
         <script type="text/javascript">
+
+            /* Clear old localStorage data */
+            localStorage.removeItem('PCRResult');
 
             /* Toggle switch */
             $(document).on('click', '.switch', function(e) {
@@ -572,12 +575,11 @@
                 e.preventDefault();
 
                 var fwd = $('#fwd-primer').val(),
-                    rev = $('#rev-primer').val();
+                    rev = $('#rev-primer').val(),
+                    thisPCRResult = `PCR result for ${fwd} (forward) and ${rev} (reverse) primers.\nIdentifier\tProduct Size\tFragment Sequence\n`;
 
-                //$(this).parents(".PCR").prepend("<div class='used-primer'>Reverse: <span class='pcr-product'>"+rev+"</span></div>");
-                //$(this).parents(".PCR").prepend("<div class='used-primer'>Forward: <span class='pcr-product'>"+fwd+"</span></div>");
-                $(this).parents(".PCR").find(".given-primers").append("<div class='used-primer'>Forward: "+fwd+"</div>");
-                $(this).parents(".PCR").find(".given-primers").append("<div class='used-primer'>Reverse: "+rev+"</div>");
+                $(this).parents(".PCR").find(".given-primers").append("<div class='used-fwd-primer'>Forward: "+fwd+"</div>");
+                $(this).parents(".PCR").find(".given-primers").append("<div class='used-rev-primer'>Reverse: "+rev+"</div>");
                 $(this).parents(".PCR").find(".given-primers").show();
 
                 // Select the active transcripts
@@ -597,7 +599,17 @@
                         <span class='caret d-inline-block align-top'>&#9660;</span> \
                         <p class='fragment'>"+fragments[t_id]["product"]+"</p> \
                     </div>");
+
+                    thisPCRResult += `${t_id}\t${fragments[t_id]['len']}\t${fragments[t_id]['product']}\n`;
                 }
+
+                // Store the PCR result in localStorage
+                let existingPCRResult = localStorage.getItem('PCRResult');
+                let updatedPCRResult = existingPCRResult ? existingPCRResult + thisPCRResult : thisPCRResult;
+                localStorage.setItem('PCRResult', updatedPCRResult);
+
+                // Display download PCR link
+                $('#download-pcr').show();
 
                 // Store the primer location data
                 // 125 + Math.round((data["exonCoord"][i]-first) * scale
@@ -637,7 +649,7 @@
 
 
             // Save as PNG
-            document.querySelector(".download-png").addEventListener("click", (evt) => {
+            document.querySelector("#download-png").addEventListener("click", (evt) => {
                 var canvas = document.getElementById("boxify");
                 link = evt.target;
                 link.href = canvas.toDataURL();
@@ -647,7 +659,7 @@
             // Save as PDF
 
             // Save as SVG
-            document.querySelector(".download-svg").addEventListener("click", (evt) => {
+            document.querySelector("#download-svg").addEventListener("click", (evt) => {
 
                 // Generate the SVG image
                 var canvas = document.getElementById("boxify");
@@ -669,6 +681,22 @@
 
                 // Remove it again
                 $("#svg-image").html('');
+            });
+
+            // Save PCR results
+            document.querySelector('#download-pcr').addEventListener('click', (evt) => {
+
+                const fileContent = localStorage.getItem('PCRResult'),
+                    blob = new Blob([fileContent], {
+                        type: 'text/csv;charset=utf-8;'
+                    }),
+                    url = window.URL.createObjectURL(blob),
+                    link = evt.target;
+
+                link.target = '_blank';
+                link.download = `${$('#form_gene').val()}_PCR_results.txt`;
+                link.href = url;
+                
             });
 
         </script>

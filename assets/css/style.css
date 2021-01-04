@@ -35,6 +35,9 @@ input[type="color"] {
 #downloads {
     display: none;
 }
+#download-pcr {
+    display: none;
+}
 
 
 /* MAIN */
