@@ -47,6 +47,7 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <title>Boxify</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="assets/css/bootstrap-icons-1.2.2/font/bootstrap-icons.css">
         <link rel="stylesheet" href="assets/css/toggle_switch.css">
         <link rel="stylesheet" href="assets/css/style.css">
     </head>
@@ -122,9 +123,9 @@
 
                         <div id="downloads" class="pt-2">
                             <hr />
-                            <a href="#" class="download-svg">Download SVG</a>
+                            <a href="#" class="download-svg"><i class="bi-file-arrow-down"></i> SVG</a>
                             <!-- <a href="#" class="stretched-link"><img src="assets/img/svg_logo_240px.png" alt="Download SVG" class="download-svg"/></a> -->
-                            <a href="#" class="download-png">Download PNG</a>
+                            <a href="#" class="download-png"><i class="bi-file-arrow-down"></i> PNG</a>
                         </div>
                     </div>
                 </div>
@@ -136,9 +137,13 @@
 
                     <div class="row">
                         <div class="col-xl-4 col-lg-6 col-sm-12 PCR">
-                            <div class="form-group vertical-align add-primer-button">
+                            <!-- <div class="form-group vertical-align add-primer-button">
                                 <button type="button" class="btn btn-primary btn-circle">+</button>
                                 Add primers
+                            </div> -->
+
+                            <div class="form-group add-primer-button">
+                                <i class="bi-plus-circle-fill"></i> Add primers
                             </div>
 
                             <div class="enter-form-here"></div>
@@ -147,9 +152,9 @@
 
                         </div>
                         <div class="col-xl-4 col-lg-6 col-sm-12 PCR">
-                            <div class="form-group vertical-align add-primer-button">
-                                <button type="button" class="btn btn-primary btn-circle">+</button>
-                                Add more primers
+                            <div class="form-group add-primer-button">
+                                <!-- <button type="button" class="btn btn-primary btn-circle">+</button> -->
+                                <i class="bi-plus-circle-fill"></i> Add more primers
                             </div>
 
                             <div class="enter-form-here"></div>
@@ -157,9 +162,9 @@
                             <div class="pcr-results"></div>
                         </div>
                         <div class="col-xl-4 col-lg-6 col-sm-12 PCR">
-                            <div class="form-group vertical-align add-primer-button">
-                                <button type="button" class="btn btn-primary btn-circle">+</button>
-                                Add more primers
+                            <div class="form-group add-primer-button">
+                                <!-- <button type="button" class="btn btn-primary btn-circle">+</button> -->
+                                <i class="bi-plus-circle-fill"></i> Add more primers
                             </div>
 
                             <div class="enter-form-here"></div>
