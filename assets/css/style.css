@@ -52,6 +52,7 @@ input[type="color"] {
     overflow-x: scroll;
     margin-left: 125px;
     font-size: 14px;
+    margin-top: -25px;
 }
 .A, .C, .G, .T {
     padding: 0 1px;
