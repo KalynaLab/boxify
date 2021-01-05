@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
 /* Prevent text selection of draggable items */
 [draggable] {
     user-select: none;
@@ -46,13 +48,27 @@ input[type="color"] {
     white-space: nowrap;
 }
 #genomic-seq {
-    overflow-x: hidden;
+    font-family: 'Roboto Mono', monospace;
+    overflow-x: scroll;
     margin-left: 125px;
-    font-family: Courier New;
     font-size: 14px;
-    display: none;
 }
-
+.A, .C, .G, .T {
+    padding: 0 1px;
+}
+.A { background: #90ee90; }
+.C { background: #b0c4de; }
+.G { background: #ffec8b; }
+.T { background: #eea2ad; }
+#ruler { 
+    visibility: hidden; 
+    position: absolute;
+}
+#window {
+    position: absolute;
+    border: 1px solid red;
+    z-index: 3;
+}
 
 #primer-search {
     display: none;
@@ -100,7 +116,10 @@ input[type="color"] {
 }
 
 /* Scroll bar customisation */
-::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar { 
+    height: 5px;
+    width: 5px; 
+}
 ::-webkit-scrollbar-track { border-radius: 5px; }
 ::-webkit-scrollbar-thumb {
     background: gray;

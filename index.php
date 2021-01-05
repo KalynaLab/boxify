@@ -134,6 +134,7 @@
                         Your browser does not support HTML5 canvas.
                     </canvas>
                     <div id="genomic-seq"></div>
+                    <div id="ruler" class="A">X</div>
 
                     <div class="row">
                         <div class="col-xl-4 col-lg-6 col-sm-12 PCR">
@@ -213,6 +214,8 @@
                     first = data["exonCoord"][0],
                     scaledExonCoord = {},
                     scaledCdsCoord = {};
+
+                localStorage.setItem('scale', scale);
 
                 // Scale the coordinates
                 for (var i in data["exonCoord"]) {
@@ -364,6 +367,29 @@
                 }
             }
 
+            function addSeqScroll(nT) {
+
+                // CREATE THE SEQUENCE WINDOW
+                // Determine the number of displayed dinucleotides bases on the 
+                // width of a single-character hidden element
+
+                $('#window').remove();
+                $('#genomic-seq').scrollLeft(0);
+
+                const ruler = $('#ruler'),
+                    x = ruler[0].getBoundingClientRect().width - 1, // Account for padding collapse
+                    w = $('#genomic-seq').width(), 
+                    n = w/x;
+
+                const windowWidth = localStorage.getItem('scale') * n,
+                    windowHeight = nT * 18,
+                    left = $('#boxify')[0].getBoundingClientRect().left + 125;
+
+                $('#main').append(`<div id='window' style='width: ${windowWidth}px; height: ${windowHeight}px;'></div>`);
+                $('#window').offset({top: 25-3, left: left}); // Get rid of hardcoded values later
+
+            }
+
             function primer_search(fwd, rev, transcripts, drawing_data) {
 
                 var rx = new RegExp(fwd+".*?(?="+revcom(rev)+")"),
@@ -415,10 +441,12 @@
                         	strand = data["gene"]["strand"],
                         	seq = data["gene"]["seq"];
 
-                        // Add the genomic sequence below the canvas
-                        $('#genomic-seq').html(seq);
+                        // Add the genomic sequence below the canvas and split per 
+                        // nucleotide for styling
+                        if (strand === '-') { seq = seq.split('').reverse().join(''); }
+                        $('#genomic-seq').html(seq.split('').map(x => `<span class='${x}'>${x}</span>`).join(''));
 
-                        if (strand == '-') { seq = seq.split('').reverse().join(''); }
+                        // if (strand == '-') { seq = seq.split('').reverse().join(''); }
                         for (var i = 0; i < transcripts.length; i++) {
                         	var t_id = transcripts[i],
                         		exons = data["transcripts"][t_id]["exons"],
@@ -434,7 +462,7 @@
                           if (strand == '+') {
                             data["transcripts"][t_id]["seq"] = spliced_seq;
                           } else {
-                            data["transcripts"][t_id]["seq"] = spliced_seq.split('').reverse().join('');
+                             data["transcripts"][t_id]["seq"] = spliced_seq.split('').reverse().join('');
                           }
 
                         }
@@ -451,6 +479,7 @@
 
                         // Draw models
                         boxify(parseInt($('#size').val()), data, transcripts, ($("#draw-CDS").attr("state") === "on" ? true : false), $('#transcriptColor').val(), $('#cdsColor').val());
+                        addSeqScroll(transcripts.length);
 
                         // Add transcripts to settings
                         $('#select-transcripts').html("");
@@ -545,6 +574,18 @@
                 // Redraw
                 //boxify(parseInt($('#size').val()), Cookies.getJSON('drawing-data'), transcripts, $('#transcriptColor').val(), $('#cdsColor').val());
                 boxify(parseInt($('#size').val()), $('#drawing-data').data(), transcripts, ($("#draw-CDS").attr("state") === "on" ? true : false), $('#transcriptColor').val(), $('#cdsColor').val());
+                addSeqScroll(transcripts.length);
+            });
+
+            /* SCROLL SEQUENCE WINDOW */
+            $('#genomic-seq').on('scroll', () => {
+
+                const scrollPerc = $('#genomic-seq').scrollLeft() / ($('#genomic-seq')[0].scrollWidth - $('#genomic-seq').width()),
+                    px = $('#genomic-seq').width(),
+                    left = $('#boxify')[0].getBoundingClientRect().left + 125,
+                    newLeft = left + ((px - $('#window').width()) * scrollPerc);
+
+                $('#window').offset({ top: 'inherit', left: newLeft });
             });
 
             /* All the primer stuff */
