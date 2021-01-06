@@ -107,7 +107,8 @@
 			"transcripts" => $transcripts,
 			"exonCoord" => $uniqExonCoord,
 			"cdsCoord" => $uniqCdsCoord,
-			"gene" => $gene
+			"gene" => $gene,
+			"primers" => array()
 		);
 
 		echo json_encode($data);

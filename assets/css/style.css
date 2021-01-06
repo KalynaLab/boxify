@@ -50,7 +50,7 @@ input[type="color"] {
 #genomic-seq {
     font-family: 'Roboto Mono', monospace;
     overflow-x: scroll;
-    margin-left: 125px;
+    /* margin-left: 125px; */
     font-size: 14px;
     margin-top: -25px;
 }
