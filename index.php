@@ -59,9 +59,17 @@
                                     <input type="range" id="size" name="drawSize"  min="600" value="800" max="1400" step="50" oninput="updateSize(value)">
                                 </div>
 
-                                <div class="form-group">
-                                    <span class="align-text-bottom">Draw CDS </span>
+                                <div class="form-group toggle">
+                                    <span>Draw CDS </span>
                                     <label class="switch" id="draw-CDS" state="on">
+                                        <input type="checkbox" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+
+                                <div class="form-group toggle">
+                                    <span>Display Sequence</span>
+                                    <label class="switch" id="show-sequence" state="on">
                                         <input type="checkbox" checked>
                                         <span class="slider round"></span>
                                     </label>

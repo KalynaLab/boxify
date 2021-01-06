@@ -26,6 +26,12 @@
 .settings-header { cursor: pointer; }
 .settings-content { display: none; }
 
+.toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 #size { width: 100%; }
 
 .color-form { margin-bottom: 0rem; }
@@ -50,7 +56,6 @@ input[type="color"] {
 #genomic-seq {
     font-family: 'Roboto Mono', monospace;
     overflow-x: scroll;
-    /* margin-left: 125px; */
     font-size: 14px;
     margin-top: -25px;
 }
@@ -87,17 +92,6 @@ input[type="color"] {
 .vertical-align {
     display: flex;
     align-items: center;
-}
-.btn-circle {
-    width: 30px;
-    height: 30px;
-    padding: 0px 0px;
-    border-radius: 15px;
-    text-align: center;
-    font-size: 1.5em;
-    font-weight: bold;
-    line-height: 0;
-    margin-right: 0.25em;
 }
 
 .given-primers {
