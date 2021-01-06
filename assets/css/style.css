@@ -18,6 +18,10 @@
 #sticky-sidebar {
     min-height: 100vh;
 }
+
+#suggestion-box {
+    position: absolute;
+}
 #error_messages { display: none; }
 
 .caret { cursor: pointer; }

@@ -123,7 +123,37 @@ $(document).on('click', '#redraw', () => {
 });
 
 /* LOAD DATA */
+// Autocomplete
+$('#form_gene').keyup(function() {
+    if ($(this).val().length > 2) {
+        $.ajax({
+            type: 'POST',
+            url: 'assets/ajax/autocomplete.php',
+            data:  `term=${$(this).val()}`,
+            beforeSend: function() {
+                $('#suggestion-box').html('');
+            },
+            success: function(data) {
+                $('#suggestion-box').show();
+                $('#suggestion-box').html(data);
+            }
+        });
+    } else {
+        $('#suggestion-box').hide();
+    }
+});
+
+$(document).on('click', '.search-suggestion', function(e) {
+    $('#form_gene').val($(this).html());
+    $('#suggestion-box').hide();
+});
+
 $(document).on('click', '#form_submit', (e) => {
+
+    // Hide any autocomplete suggestions
+    $('#suggestion-box').hide();
+    $('#form_gene').blur();
+
     e.preventDefault();
     resetPCR(); // Might not need this function, because I think I'm only calling it once
 
