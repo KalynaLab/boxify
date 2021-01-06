@@ -145,16 +145,15 @@ $('#form_gene').keyup(function() {
 
 $(document).on('click', '.search-suggestion', function(e) {
     $('#form_gene').val($(this).html());
-    $('#suggestion-box').hide();
+    loadData();
 });
 
-$(document).on('click', '#form_submit', (e) => {
+function loadData() {
 
     // Hide any autocomplete suggestions
     $('#suggestion-box').hide();
     $('#form_gene').blur();
 
-    e.preventDefault();
     resetPCR(); // Might not need this function, because I think I'm only calling it once
 
     let geneID = $('#form_gene').val();
@@ -225,7 +224,13 @@ $(document).on('click', '#form_submit', (e) => {
             $('#error_messages').show();
         }
 
-    });
+    });   
+
+}
+
+$(document).on('click', '#form_submit', (e) => {
+    e.preventDefault();
+    loadData();
 });
 
 /* DRAW STUFF */
