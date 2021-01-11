@@ -1,0 +1,80 @@
+:root {
+    --00dp: #121212;
+    --01dp: #1e1e1e;
+    --02dp: #222222;
+    --03dp: #242424;
+    --04dp: #272727;
+    --06dp: #2c2c2c;
+    --08dp: #2e2e2e;
+    --12dp: #333333;
+    --16dp: #353535;
+    --24dp: #383838;
+    --boxify-blue: #428bca;
+    --boxify-green: #51a351;
+}
+
+.container {
+    background-color: var(--00dp);
+    color: #ddd;
+}
+aside {
+    border-right: 1px solid var(--04dp);
+}
+aside p {
+    color: #ccc;
+}
+
+/* SEARCH */
+#search {
+    border-bottom: 1px solid var(--04dp);
+}
+input[type="search"] {
+    border: 1px solid var(--04dp);
+    background-color: var(--01dp);
+    color: #ddd;
+}
+.search-suggestion {
+    background-color: var(--01dp);
+    border: 1px solid var(--04dp);
+    border-bottom: none;
+}
+.search-suggestion:hover {
+    color: var(--boxify-green);
+    cursor: pointer;
+    background-color: var(--06dp);
+}
+
+/* SETTINGS */
+#transcripts {
+    border-bottom: 1px solid var(--04dp);
+}
+#select-transcripts li {
+    border: 1px solid var(--04dp);
+    border-bottom: none;
+    color: #aaa;
+}
+#select-transcripts .selected {
+    background-color: var(--01dp);
+    color: #ddd;
+}
+#select-transcripts li:last-child {
+    border-bottom: 1px solid var(--04dp);
+}
+
+#settings {
+    border-bottom: 1px solid var(--04dp);
+}
+
+input:checked + .slider {
+    background-color: var(--boxify-green);
+}
+.slider {
+    background-color: var(--12dp);
+}
+
+input[type="color"] {
+    background-color: var(--24dp);
+}
+input[type="color"]:focus {
+    outline: none;
+}

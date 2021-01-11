@@ -41,7 +41,7 @@ $(document).on('click', '#show-sequence', function(e) {
 
 // Reorder transcripts
 let dragging = null;
-const border = 'dashed 2px black',
+const border = 'dashed 2px',
     dragParent = 'select-transcripts';
 
 // dragstart
@@ -89,6 +89,7 @@ document.addEventListener('drop', (e) => {
 });
 
 // Transcript selection
+// DELETE THIS AFTER REDESIGN
 $(document).on('click', '#select-transcripts button', function() {
 
     // Make sure at least one transcript is selected
@@ -98,7 +99,24 @@ $(document).on('click', '#select-transcripts button', function() {
         $(this).addClass('list-group-item-dark');
     }
 
-})
+});
+
+$(document).on('click', '#select-transcripts li', function() {
+
+    if ($('#select-transcripts li.selected').length > 1) {
+        if ($(this).hasClass('selected')) {
+            $(this).removeClass('selected');
+            $(this).find('i').removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            $(this).addClass('selected');
+            $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    } else {
+        $(this).addClass('selected');
+        $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
+    }
+
+});
 
 // Adjust gene model size
 function updateSize(x) {

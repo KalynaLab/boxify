@@ -16,6 +16,7 @@
         <link rel="stylesheet" href="assets/css/bootstrap-icons-1.2.2/font/bootstrap-icons.css">
         <link rel="stylesheet" href="assets/css/toggle_switch.css">
         <link rel="stylesheet" href="assets/css/style.css">
+        <!-- <link rel="stylesheet" href="assets/css/dark.css"> -->
     </head>
     <body>
 
