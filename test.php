@@ -17,7 +17,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/toggle_switch.css">
-        <link rel="stylesheet" href="assets/css/dark.css">
+        <!-- <link rel="stylesheet" href="assets/css/dark.css"> -->
         <style>
             * { 
                 margin: 0;
@@ -54,7 +54,7 @@
                 box-sizing: border-box;
                 padding: 1em;
             }
-            #search i {
+            #search .bi-search {
                 position: absolute;
                 margin: 0.5em 0em 0.5em 0.75em;
             }
@@ -87,6 +87,7 @@
             }
             #suggestion-box {
                 position: absolute;
+                z-index: 3;
             }
             #suggestion-box ul {
                 list-style: none;
@@ -101,12 +102,60 @@
                 border-bottom-right-radius: 5px;
             }
 
+            #error-messages {
+                display: none;
+                align-items: center;
+                line-height: 0.8em;
+                margin: 1em 0.5em 0 0.75em;
+
+                /* Automatically hide after 5 second */
+                -moz-animation: autoHide 0s ease-in 5s forwards;
+                -webkit-animation: autoHide 0s ease-in 5s forwards;
+                -o-animation: autoHide 0s ease-in 5s fowards;
+                animation: autoHide 0s ease-in 5s forwards;
+                -webkit-animation-fill-mode: forwards;
+                animation-fill-mode: forwards;
+            }
+            #error-messages i {
+                margin-right: 0.75em;
+            }
+
+            /* Not sure if this is going to work on the second error: https://stackoverflow.com/questions/21993661/css-auto-hide-elements-after-5-seconds */
+            @keyframes autoHide {
+                to {
+                    width: 0;
+                    height: 0;
+                    margin: 0;
+                    overflow: hidden;
+                }
+            }
+            @-webkit-keyframes autoHide {
+                to {
+                    width: 0;
+                    height: 0;
+                    margin: 0;
+                    visibility: hidden;
+                }
+            }
+
             /* SETTINGS */
+            #theme {
+                padding: 1em;
+            }
+            #toggle-theme-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: space-evenly;                
+            }
+
             .info {
                 margin-bottom: 0.5em;
             }
-            #transcripts, #settings {
+            #transcripts, #settings, #downloads, #theme {
                 padding: 1em;
+            }
+            #transcripts, #settings, #downloads {
+                display: none;
             }
             #select-transcripts {
                 list-style: none;
@@ -159,13 +208,69 @@
                 border: none;
             }
 
+            #downloads {
+                display: none;
+                flex-direction: column;
+            }
+            #downloads button {
+                padding: 0.5em 0.25em;
+                margin-bottom: 0.2em;
+                cursor: pointer;
+                border-radius: 2px;
+            }
+            #downloads button:focus {
+                outline: none;
+            }
+            #downloads i {
+                margin-right: 0.25em;
+            }
+            #download-pcr {
+                display: none;
+            }
 
             main {
                 grid-area: content;
             }
 
+
+            /* MODELS */
+            #genomic-seq {
+                font-family: 'Roboto Mono', monospace;
+                overflow-x: scroll;
+                font-size: 14px;
+                margin-top: -25px;
+            }
+            .A, .C, .G, .T {
+                padding: 0 1px;
+            }
+            .A { background: #90ee90; }
+            .C { background: #b0c4de; }
+            .G { background: #ffec8b; }
+            .T { background: #eea2ad; }
+            #ruler { 
+                visibility: hidden; 
+                position: absolute;
+            }
+            #window {
+                position: absolute;
+                border: 1px solid red;
+                z-index: 3;
+            }
+
+
             footer {
                 grid-area: footer;
+            }
+
+            /* Scroll bar customisation */
+            ::-webkit-scrollbar { 
+                height: 5px;
+                width: 5px; 
+            }
+            ::-webkit-scrollbar-track { border-radius: 5px; }
+            ::-webkit-scrollbar-thumb {
+                background: gray;
+                border-radius: 5px;
             }
         </style>
     </head>
@@ -176,7 +281,7 @@
 
                 <div id="search">
                     <i class="bi-search"></i>
-                    <input type="search" id="search-gene" placeholder="Search gene" aria-label="Search for a gene">
+                    <input type="search" id="search-gene" placeholder="Search gene" aria-label="Search for a gene" autofocus>
                     <div id="suggestion-box">
                         <!-- <ul>
                             <li class="search-suggestion">AT1G01010</li>
@@ -186,6 +291,9 @@
                             <li class="search-suggestion">AT1G01020</li>
                         </ul> -->
                     </div>
+                    <div id="error-messages">
+                        <!-- <i class="bi-exclamation-triangle-fill"></i><span>Gene not found!</span> -->
+                    </div>
                 </div>
 
                 <div id="transcripts">
@@ -193,10 +301,10 @@
                         Select transcripts to display and drag to change their order.
                     </p>
                     <ul id="select-transcripts">
-                        <li class="t-id selected" draggable="true"><span>AT3G61860.c1</span><i class="bi-eye"></i></li>
+                        <!-- <li class="t-id selected" draggable="true"><span>AT3G61860.c1</span><i class="bi-eye"></i></li>
                         <li class="t-id" draggable="true"><span>AT3G61860.c2</span><i class="bi-eye-slash"></i></li>
                         <li class="t-id selected" draggable="true"><span>AT3G61860.P1</span><i class="bi-eye"></i></li>
-                        <li class="t-id selected" draggable="true"><span>AT3G61860.ID1</span><i class="bi-eye"></i></li>    
+                        <li class="t-id selected" draggable="true"><span>AT3G61860.ID1</span><i class="bi-eye"></i></li> -->
                     </ul>
                 </div>
 
@@ -236,13 +344,44 @@
                     </div>
 
                 </div>
+
+                <div id="downloads">
+                    <p class="info">Downloads</p>
+                    <button id="download-svg"><i class="bi-file-arrow-down"></i>SVG</button>
+                    <button id="download-png"><i class="bi-file-arrow-down"></i>PNG</button>
+                    <button id="download-pcr"><i class="bi-file-arrow-down"></i>PCR result</button>
+                </div>
+
+                <div id="theme">
+                    <p class="info">Toggle between a light and dark theme.</p>
+                    <div id="toggle-theme-wrapper">
+                        <i class="bi-sun"></i>
+                        <label class="switch" id="toggle-theme" state="off">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <i class="bi-moon"></i>
+                    </div>
+                </div>
+
             </aside>
-            <main></main>
+            
+            <main>
+
+                <canvas id="boxify">
+                    Your browser does not support HTML5 support.
+                </canvas>
+                <div id="genomic-seq"></div>
+                <div id="ruler" class="A">X</div> <!-- Possibly replace this by pure javascript -->
+
+            </main>
 
             <footer></footer>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+        <script src="assets/js/functions.js"></script>
+        <script src="assets/js/canvas-getsvg.js"></script>
         <script src="assets/js/boxify.js"></script>
     </body>
 </html>

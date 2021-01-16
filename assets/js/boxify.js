@@ -28,6 +28,9 @@ $(document).on('click', '.settings-header', () => {
 $(document).on('click', '.switch', function(e) {
     if ($(e.target).is('input')) {
         $(this).attr('state', ($(this).attr('state') === 'on' ? 'off' : 'on'));
+        if ($(this).attr('id') === 'toggle-theme') {
+            toggleTheme();
+        }
     }
 });
 
@@ -38,6 +41,15 @@ $(document).on('click', '#show-sequence', function(e) {
         $('#genomic-seq').toggle();
     }
 });
+
+// Toggle light and dark mode
+function toggleTheme() {
+    if ($('#toggle-theme').attr('state') === 'on') {
+        $('head').append( $(`<link rel="stylesheet" type="text/css"/>`).attr('href', 'assets/css/dark.css') );
+    } else {
+        $('link[rel=stylesheet][href="assets/css/dark.css"]').remove();
+    }
+}
 
 // Reorder transcripts
 let dragging = null;
@@ -127,8 +139,8 @@ function updateSize(x) {
 $(document).on('click', '#redraw', () => {
 
     // Select the active transcripts
-    let trsIDS = $('#select-transcripts').find('.list-group-item-dark').map((i, e) => { return $(e).html(); }).get();
-
+    let trsIDS = $('#select-transcripts').find('.selected').map((i, e) => { return $(e).html(); }).get();
+    
     boxify(
         parseInt($('#size').val()),
         trsIDS,
@@ -142,7 +154,7 @@ $(document).on('click', '#redraw', () => {
 
 /* LOAD DATA */
 // Autocomplete
-$('#form_gene').keyup(function() {
+$('#search-gene').keyup(function() {
     if ($(this).val().length > 2) {
         $.ajax({
             type: 'POST',
@@ -162,7 +174,7 @@ $('#form_gene').keyup(function() {
 });
 
 $(document).on('click', '.search-suggestion', function(e) {
-    $('#form_gene').val($(this).html());
+    $('#search-gene').val($(this).html());
     loadData();
 });
 
@@ -170,11 +182,11 @@ function loadData() {
 
     // Hide any autocomplete suggestions
     $('#suggestion-box').hide();
-    $('#form_gene').blur();
+    $('#search-gene').blur();
 
     resetPCR(); // Might not need this function, because I think I'm only calling it once
 
-    let geneID = $('#form_gene').val();
+    let geneID = $('#search-gene').val();
     console.log(geneID);
 
     // Data retrieval and drawing
@@ -229,26 +241,31 @@ function loadData() {
             $('#select-transcripts').html('');
             for (let i = 0; i < trsIDS.length; i++) {
                 let tID = trsIDS[i];
-                $('#select-transcripts').append(`<button type='button' class='list-group-item list-group-item-action list-group-item-dark' draggable='true'>${tID}</button>`);
+                // $('#select-transcripts').append(`<button type='button' class='list-group-item list-group-item-action list-group-item-dark' draggable='true'>${tID}</button>`);
+                $('#select-transcripts').append(`<li class="t-id selected" draggable="true"><span>${tID}</span><i class="bi-eye"></i></span></li>`);
             }
             
-            $('#error_messages').hide();
-            $('#settings').show();
+            $('#error-messages').hide();
+            $('#transcripts, #settings').show();
             $('.PCR').first().show();
-            $('#downloads').show();
+            $('#downloads').css('display', 'flex');
         
         } else { // Show error
-            $('#error_messages').html(`<strong>Error!</strong> ${data['messages']}`);
-            $('#error_messages').show();
+            $('#error-messages').html(`<i class="bi-exclamation-triangle-fill"></i><span>${data['messages']}</span>`);
+            $('#error-messages').css('display', 'flex');
+            $('#error-messages').show();
         }
 
     });   
 
 }
 
-$(document).on('click', '#form_submit', (e) => {
-    e.preventDefault();
-    loadData();
+$(document).keypress((e) => {
+    let keycode = (e.keyCode ? e.keyCode : e.which);
+    if (keycode === 13) {
+        e.preventDefault;
+        loadData();
+    }
 });
 
 /* DRAW STUFF */
@@ -402,6 +419,8 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
 // element
 function addSeqScroll(nT) {
 
+    console.log(nT);
+
     // Remove any potentially existing window and reset scrolling
     $('#window').remove();
     $('#genomic-seq').scrollLeft(0);
@@ -417,7 +436,7 @@ function addSeqScroll(nT) {
         windowHeight = nT * (BOX_HEIGHT + HALF_BOX_HEIGHT),
         left = $('#boxify')[0].getBoundingClientRect().left + DEFAULT_LEFT_MARGIN;
 
-    $('#main').append(`<div id='window' style='width: ${windowWidth}px; height: ${windowHeight}px;'></div>`);
+    $('main').append(`<div id='window' style='width: ${windowWidth}px; height: ${windowHeight}px;'></div>`);
     $('#window').offset({ top: DEFAULT_TOP_MARGIN - (BOX_HEIGHT / 4), left: left })
 
     // See if the window needs to be hidden
@@ -487,7 +506,8 @@ $(document).on('click', '#primer-search-submit', function(e) {
 
     const fwd = $('#fwd-primer').val(),
         rev = $('#rev-primer').val(),
-        trsIDS = $('#select-transcripts').find('.list-group-item-dark').map((i, e) => { return $(e).html(); }).get();
+        //trsIDS = $('#select-transcripts').find('.list-group-item-dark').map((i, e) => { return $(e).html(); }).get();
+        trsIDS = $('#select-transcripts').find('.selected').map((i, e) => { return $(e).html(); }).get();
 
     let data = JSON.parse(localStorage.getItem('data'));
     let thisPCR = `PCR result for ${fwd} (forward) and ${rev} (reverse) primers.\nIdentifier\tProduct Size\tFragment Sequence\n`;
@@ -558,7 +578,7 @@ document.querySelector('#download-png').addEventListener('click', (e) => {
     const canvas = document.getElementById('boxify');
     link = e.target;
     link.href = canvas.toDataURL();
-    link.download = $('#form_gene').val() + '.png';
+    link.download = $('#search-gene').val() + '.png';
 });
 
 // Save as SVG
@@ -576,7 +596,7 @@ document.querySelector('#download-svg').addEventListener('click', (e) => {
           link = e.target;//.parentElement;
 
     link.target = '_blank';
-    link.download = $('#form_gene').val() + '.svg'; // Change to drawing-data gene_id
+    link.download = $('#search-gene').val() + '.svg'; // Change to drawing-data gene_id
     link.href = url;
 
     // Remove it again
@@ -594,6 +614,6 @@ document.querySelector('#download-pcr').addEventListener('click', (evt) => {
         link = evt.target;
 
     link.target = '_blank';
-    link.download = `${$('#form_gene').val()}_PCR_results.txt`;
+    link.download = `${$('#search-gene').val()}_PCR_results.txt`;
     link.href = url; 
 });

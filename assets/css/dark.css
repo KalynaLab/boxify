@@ -43,9 +43,12 @@ input[type="search"] {
     cursor: pointer;
     background-color: var(--06dp);
 }
+#error-messages {
+    color: #980000;
+}
 
 /* SETTINGS */
-#transcripts {
+#transcripts, #settings, #downloads, #theme {
     border-bottom: 1px solid var(--04dp);
 }
 #select-transcripts li {
@@ -61,10 +64,6 @@ input[type="search"] {
     border-bottom: 1px solid var(--04dp);
 }
 
-#settings {
-    border-bottom: 1px solid var(--04dp);
-}
-
 input:checked + .slider {
     background-color: var(--boxify-green);
 }
@@ -77,4 +76,18 @@ input[type="color"] {
 }
 input[type="color"]:focus {
     outline: none;
+}
+
+#downloads button {
+    border: 1px solid var(--04dp);
+    background-color: var(--01dp);
+    /* border: 1px solid var(--boxify-green); */
+    color: #ccc;
+}
+#downloads button:hover {
+    border: 1px solid var(--boxify-green);
+}
+
+#genomic-seq {
+    color: black;
 }

@@ -8,11 +8,11 @@
 
     $genes = array();
     if ($stmt->rowCount() > 0) {
-        echo '<div class="list-group" style="margin-top: -16px;">';
+        echo '<ul>';
         foreach ($stmt as $row) {
-            echo '<a href="#" class="list-group-item list-group-item-action search-suggestion">' . $row['g_id'] . '</a>';
+            echo '<li class="search-suggestion">' . $row['g_id'] . '</li>';
         }
-        echo '</div>';
+        echo '</ul>';
     }
 
 ?>
