@@ -19,6 +19,20 @@
         <link rel="stylesheet" href="assets/css/toggle_switch.css">
         <!-- <link rel="stylesheet" href="assets/css/dark.css"> -->
         <style>
+            :root {
+                --00dp: #121212;
+                --01dp: #1e1e1e;
+                --02dp: #222222;
+                --03dp: #242424;
+                --04dp: #272727;
+                --06dp: #2c2c2c;
+                --08dp: #2e2e2e;
+                --12dp: #333333;
+                --16dp: #353535;
+                --24dp: #383838;
+                --boxify-blue: #428bca;
+                --boxify-green: #51a351; 
+            }
             * { 
                 margin: 0;
                 padding: 0;
@@ -42,6 +56,7 @@
 
             aside {
                 grid-area: settings;
+                border-right: 1px solid black;
             }
 
             aside h2 {
@@ -50,6 +65,9 @@
             }
 
             /* SEARCH */
+            #search, #transcripts, #settings, #downloads, #theme {
+                border-bottom: 1px solid black;
+            }
             #search {
                 box-sizing: border-box;
                 padding: 1em;
@@ -60,11 +78,15 @@
             }
             input[type="search"] {
                 border-radius: 20px; 
+                border: 1px solid black;
                 box-sizing: border-box;
                 width: 100%;
                 padding: 0.25em 0.75em 0.25em 1.8em;
                 font-size: 21px;
                 text-transform: uppercase;
+            }
+            input[type="search"]:focus {
+                outline: none;
             }
             ::-webkit-input-placeholder { /* WebKit browsers */
                 text-transform: none;
@@ -81,10 +103,6 @@
             ::placeholder { /* Recent browsers */
                 text-transform: none;
             }
-            input[type="search"]:focus {
-                border: 1px solid var(--boxify-green);
-                outline: none;
-            }
             #suggestion-box {
                 position: absolute;
                 z-index: 3;
@@ -96,10 +114,18 @@
             .search-suggestion {
                 box-sizing: border-box;
                 padding: 0.5em; 
+                background-color: white;
+                border: 1px solid black;
+                border-bottom: none;
             }
             .search-suggestion:last-child {
                 border-bottom-left-radius: 5px;
                 border-bottom-right-radius: 5px;
+                border-bottom: 1px solid black;
+            }
+            .search-suggestion:hover {
+                cursor: pointer;
+                color: var(--boxify-green);
             }
 
             #error-messages {
@@ -165,6 +191,12 @@
                 justify-content: space-between;
                 padding: 0.5em 1em;
                 cursor: pointer;
+                border: 1px solid black;
+                border-bottom: none;
+                color: rgba(0, 0, 0, 0.25);
+            }
+            #select-transcripts li.selected {
+                color: rgba(0, 0, 0, 1);
             }
             #select-transcripts li:first-child {
                 border-top-left-radius: 5px;
@@ -173,6 +205,7 @@
             #select-transcripts li:last-child {
                 border-bottom-left-radius: 5px;
                 border-bottom-right-radius: 5px;
+                border-bottom: 1px solid black;
             }
 
             #adjust-size {
@@ -216,8 +249,13 @@
                 padding: 0.5em 0.25em;
                 margin-bottom: 0.2em;
                 cursor: pointer;
+                border: 1px solid black;
                 border-radius: 2px;
             }
+            #downloads button:hover {
+               color: var(--boxify-green);
+            }
+            
             #downloads button:focus {
                 outline: none;
             }
@@ -314,7 +352,7 @@
                     <p class="info">Adjust the size of the transcript models.</p>
                     <div id="adjust-size">
                         <label for="drawSize"><span id="slideSize">800</span>px</label>
-                        <input type="range" id="size" name="drawSize"  min="600" value="800" max="1400" step="50" oninput="updateSize(value)">
+                        <input type="range" id="size" name="drawSize"  min="600" value="800" max="1400" step="50">
                     </div>
 
                     <div class="toggle">

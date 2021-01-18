@@ -1,16 +1,5 @@
 :root {
-    --00dp: #121212;
-    --01dp: #1e1e1e;
-    --02dp: #222222;
-    --03dp: #242424;
-    --04dp: #272727;
-    --06dp: #2c2c2c;
-    --08dp: #2e2e2e;
-    --12dp: #333333;
-    --16dp: #353535;
-    --24dp: #383838;
-    --boxify-blue: #428bca;
-    --boxify-green: #51a351;
+
 }
 
 .container {
@@ -25,7 +14,7 @@ aside p {
 }
 
 /* SEARCH */
-#search {
+#search, #transcripts, #settings, #downloads, #theme {
     border-bottom: 1px solid var(--04dp);
 }
 input[type="search"] {
@@ -36,11 +25,8 @@ input[type="search"] {
 .search-suggestion {
     background-color: var(--01dp);
     border: 1px solid var(--04dp);
-    border-bottom: none;
 }
 .search-suggestion:hover {
-    color: var(--boxify-green);
-    cursor: pointer;
     background-color: var(--06dp);
 }
 #error-messages {
@@ -48,15 +34,12 @@ input[type="search"] {
 }
 
 /* SETTINGS */
-#transcripts, #settings, #downloads, #theme {
-    border-bottom: 1px solid var(--04dp);
-}
 #select-transcripts li {
     border: 1px solid var(--04dp);
     border-bottom: none;
     color: #aaa;
 }
-#select-transcripts .selected {
+#select-transcripts li.selected {
     background-color: var(--01dp);
     color: #ddd;
 }
@@ -75,7 +58,7 @@ input[type="color"] {
     background-color: var(--24dp);
 }
 input[type="color"]:focus {
-    outline: none;
+    border: 1px solid var(--boxify-green);
 }
 
 #downloads button {

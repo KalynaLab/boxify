@@ -97,6 +97,7 @@ document.addEventListener('drop', (e) => {
             e.target.style['border-top'] = '';
             e.target.parentNode.insertBefore(dragging, e.target);
         }
+        redraw();
     }
 });
 
@@ -123,23 +124,40 @@ $(document).on('click', '#select-transcripts li', function() {
             $(this).addClass('selected');
             $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
         }
+        redraw();
     } else {
         $(this).addClass('selected');
         $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
+        redraw();
     }
 
 });
 
 // Adjust gene model size
-function updateSize(x) {
-    $('#slideSize').html(x);
-}
+$(document).on('change', '#size', () => {
+    $('#slideSize').html($('#size').val());
+    redraw();
+});
 
 // Redraw
+function redraw() {
+    // Select the active transcripts
+    let trsIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get();
+    
+    boxify(
+        parseInt($('#size').val()),
+        trsIDS,
+        ($('#draw-CDS').attr('state') === 'on' ? true : false),
+        $('#transcriptColor').val(),
+        $('#cdsColor').val()
+    );
+    addSeqScroll(trsIDS.length);    
+}
+
 $(document).on('click', '#redraw', () => {
 
     // Select the active transcripts
-    let trsIDS = $('#select-transcripts').find('.selected').map((i, e) => { return $(e).html(); }).get();
+    let trsIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get();
     
     boxify(
         parseInt($('#size').val()),
@@ -419,8 +437,6 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
 // element
 function addSeqScroll(nT) {
 
-    console.log(nT);
-
     // Remove any potentially existing window and reset scrolling
     $('#window').remove();
     $('#genomic-seq').scrollLeft(0);
@@ -455,6 +471,16 @@ $('#genomic-seq').on('scroll', () => {
 
     $('#window').offset({ top: 'inherit', left: newLeft });   
 });
+
+/* AUTO-REDRAW */
+// On CDS change
+$(document).on('change', '#draw-CDS', () => {
+    redraw();
+});
+$(document).on('change', '#transcriptColor, #cdsColor', () => {
+    redraw();
+});
+
 
 /* PCR STUFF */
 function primerSearch(fwdPrimer, revPrimer, transcripts) {
@@ -507,7 +533,7 @@ $(document).on('click', '#primer-search-submit', function(e) {
     const fwd = $('#fwd-primer').val(),
         rev = $('#rev-primer').val(),
         //trsIDS = $('#select-transcripts').find('.list-group-item-dark').map((i, e) => { return $(e).html(); }).get();
-        trsIDS = $('#select-transcripts').find('.selected').map((i, e) => { return $(e).html(); }).get();
+        trsIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get();
 
     let data = JSON.parse(localStorage.getItem('data'));
     let thisPCR = `PCR result for ${fwd} (forward) and ${rev} (reverse) primers.\nIdentifier\tProduct Size\tFragment Sequence\n`;
