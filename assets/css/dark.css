@@ -61,6 +61,10 @@ input[type="color"]:focus {
     border: 1px solid var(--boxify-green);
 }
 
+#reset-settings {
+    border-top: 1px solid var(--04dp);
+}
+
 #downloads button {
     border: 1px solid var(--04dp);
     background-color: var(--01dp);

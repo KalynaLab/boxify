@@ -49,6 +49,7 @@ function toggleTheme() {
     } else {
         $('link[rel=stylesheet][href="assets/css/dark.css"]').remove();
     }
+    redraw();
 }
 
 // Reorder transcripts
@@ -369,7 +370,7 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
         function drawTranscript(tID, coord, scaledCoord, strand, vOffset, color='#428BCA') {
 
             ctx.font = '12px sans-serif';
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = ($('#toggle-theme').attr('state') === 'on' ? 'white' : 'black');
             ctx.textBaseLine = 'top';
             ctx.fillText(tID, DEFAULT_BORDER_MARGIN, vOffset+12, 100);
             ctx.fillStyle = color;
@@ -474,10 +475,7 @@ $('#genomic-seq').on('scroll', () => {
 
 /* AUTO-REDRAW */
 // On CDS change
-$(document).on('change', '#draw-CDS', () => {
-    redraw();
-});
-$(document).on('change', '#transcriptColor, #cdsColor', () => {
+$(document).on('change', '#draw-CDS, #transcriptColor, #cdsColor', () => {
     redraw();
 });
 
@@ -598,13 +596,53 @@ $(document).on('click', '.pcr-info .caret', function() {
     $(this).html(($(this).html().charCodeAt(0) === 9660 ? '&#9650;' : '&#9660;'));
 });
 
+/* RESET SETTINGS */
+$(document).on('click', '#reset-settings', () => {
+
+    // Select all transcripts
+    $('#select-transcripts').find('li').each(function(i) {
+        $(this).addClass('selected');
+        $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
+    });
+
+    // Set size back to 800px
+    $('#slideSize').html(800);
+    $('#size').val(800);
+
+    // Turn CDS drawing on
+    if ($('#draw-CDS').attr('state') === 'off') {
+        $('#draw-CDS').click();
+        $('#draw-CDS').attr('state', 'on');
+    }
+
+    // Display sequence
+    if ($('#show-sequence').attr('state') === 'off') {
+        $('#show-sequence').click();
+        $('#show-sequence').attr('state', 'on');
+        $('#window, #genomic-seq').show();
+    }
+
+    // Reset transcript and CDS colors
+    $('#transcriptColor').val('#428bca');
+    $('#cdsColor').val('#51a351');
+
+    redraw();
+
+});
+
 /* SAVE FILES */
 // Save as PNG
 document.querySelector('#download-png').addEventListener('click', (e) => {
+
     const canvas = document.getElementById('boxify');
-    link = e.target;
-    link.href = canvas.toDataURL();
-    link.download = $('#search-gene').val() + '.png';
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL();
+    a.download = $('#search-gene').val() + '.png';
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
 });
 
 // Save as SVG
@@ -619,11 +657,15 @@ document.querySelector('#download-svg').addEventListener('click', (e) => {
               type: 'image/svg+xml'
           }),
           url = window.URL.createObjectURL(blob),
-          link = e.target;//.parentElement;
+          link = document.createElement('a');
 
     link.target = '_blank';
     link.download = $('#search-gene').val() + '.svg'; // Change to drawing-data gene_id
     link.href = url;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
     // Remove it again
     $('#svg-image').html('');

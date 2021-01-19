@@ -180,7 +180,7 @@
             #transcripts, #settings, #downloads, #theme {
                 padding: 1em;
             }
-            #transcripts, #settings, #downloads {
+            #transcripts, #settings {
                 display: none;
             }
             #select-transcripts {
@@ -239,6 +239,22 @@
                 border-radius: 10px;
                 padding: 2px;
                 border: none;
+            }
+
+            #reset-settings {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 1em;
+                padding-top: 1em;
+                cursor: pointer;
+                border-top: 1px solid black;
+            }
+            #reset-settings:hover {
+                color: var(--boxify-green);
+            }
+            #reset-settings i {
+                margin: -3px 0 0 5px;
             }
 
             #downloads {
@@ -381,12 +397,17 @@
                         <input type="color" id="cdsColor" value="#51a351">
                     </div>
 
+                    <div id="reset-settings">
+                        <span>Reset settings</span>
+                        <i class="bi-arrow-repeat"></i>
+                    </div>
+
                 </div>
 
                 <div id="downloads">
                     <p class="info">Downloads</p>
-                    <button id="download-svg"><i class="bi-file-arrow-down"></i>SVG</button>
                     <button id="download-png"><i class="bi-file-arrow-down"></i>PNG</button>
+                    <button id="download-svg"><i class="bi-file-arrow-down"></i>SVG</button>
                     <button id="download-pcr"><i class="bi-file-arrow-down"></i>PCR result</button>
                 </div>
 
@@ -411,6 +432,8 @@
                 </canvas>
                 <div id="genomic-seq"></div>
                 <div id="ruler" class="A">X</div> <!-- Possibly replace this by pure javascript -->
+
+                <div id="svg-image"></div>
 
             </main>
 
