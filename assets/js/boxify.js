@@ -5,17 +5,78 @@ const DEFAULT_TOP_MARGIN = 25;
 const DEFAULT_LEFT_MARGIN = 125;
 const DEFAULT_BORDER_MARGIN = 25;
 
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   {number}  h       The hue
+ * @param   {number}  s       The saturation
+ * @param   {number}  l       The lightness
+ * @return  {Array}           The RGB representation
+*/
+function hslToRgb(h, s, l){
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+
+function css_rgb2hex(rgb){
+    var regexp = /^rgb\((\d+),\s+(\d+),\s+(\d+)\)$/g,
+        groups = regexp.exec(rgb);
+    return '#' + 
+        ('0' + parseInt(groups[1],10).toString(16)).slice(-2) +
+        ('0' + parseInt(groups[2],10).toString(16)).slice(-2) +
+        ('0' + parseInt(groups[3],10).toString(16)).slice(-2);
+}
+
+function rgb2hex(r, g, b) {
+    return '#' +
+        ('0' + r.toString(16)).slice(-2) +
+        ('0' + g.toString(16)).slice(-2) +
+        ('0' + b.toString(16)).slice(-2);
+}
+
+function getRandomHEX() {
+    // https://www.w3schools.com/colors/colors_hsl.asp
+    var h = 360 * Math.random();
+    var s = 100 + 70 * Math.random();
+    var l = 175 + 25 * Math.random();
+    
+    rgb = hslToRgb(h/360, s/100, l/100);
+    return rgb2hex(rgb[0], rgb[1], rgb[2]);
+} 
+
+
 /* STUFF DO ON PAGE LOAD */
 function resetPCR() {
-    // Hide previous PCR
-    $('.given-primers').empty().hide();
-    $('.pcr-results').empty();
-    $('.PCR').hide();
-    $('.add-primer-button').show();
+    $('.pcr').each(function() { $(this).remove(); });
+    $('#add-primer-button').css('display', 'flex');
 }
 
 // Clear old localStorage data
-localStorage.removeItem('PCR');
+['data', 'scale', 'PCR'].forEach(k => localStorage.removeItem(k));
 
 /* SETTINGS */
 // Expand/Collapse settings
@@ -39,6 +100,7 @@ $(document).on('click', '#show-sequence', function(e) {
     if ($(e.target).is('input')) {
         $('#window').toggle();
         $('#genomic-seq').toggle();
+        $('#pcr-wrapper').toggleClass('no-seq');
     }
 });
 
@@ -145,14 +207,16 @@ function redraw() {
     // Select the active transcripts
     let trsIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get();
     
-    boxify(
-        parseInt($('#size').val()),
-        trsIDS,
-        ($('#draw-CDS').attr('state') === 'on' ? true : false),
-        $('#transcriptColor').val(),
-        $('#cdsColor').val()
-    );
-    addSeqScroll(trsIDS.length);    
+    if (trsIDS.length) {
+        boxify(
+            parseInt($('#size').val()),
+            trsIDS,
+            ($('#draw-CDS').attr('state') === 'on' ? true : false),
+            $('#transcriptColor').val(),
+            $('#cdsColor').val()
+        );
+        addSeqScroll(trsIDS.length);
+    }
 }
 
 $(document).on('click', '#redraw', () => {
@@ -203,8 +267,6 @@ function loadData() {
     $('#suggestion-box').hide();
     $('#search-gene').blur();
 
-    resetPCR(); // Might not need this function, because I think I'm only calling it once
-
     let geneID = $('#search-gene').val();
     console.log(geneID);
 
@@ -242,7 +304,7 @@ function loadData() {
 
             // Add the genomic sequence to the document and assign class per nucleotide
             $('#genomic-seq').html(seq.split('').map(nt => `<span class='${nt}'>${nt}</span>`).join(''));
-            $('#genomic-seq').offset({ top: 'inherit', left: $('#boxify')[0].getBoundingClientRect().left + DEFAULT_LEFT_MARGIN });
+            $('#genomic-seq').offset({ top: 'inherit', left: $('main')[0].getBoundingClientRect().left + DEFAULT_LEFT_MARGIN });
 
             // Draw models
             boxify(
@@ -266,7 +328,7 @@ function loadData() {
             
             $('#error-messages').hide();
             $('#transcripts, #settings').show();
-            $('.PCR').first().show();
+            resetPCR(); // Might not need this function, because I think I'm only calling it once
             $('#downloads').css('display', 'flex');
         
         } else { // Show error
@@ -361,10 +423,11 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
         // Draw the primer boxes, if any
         const verticalOffset = DEFAULT_BORDER_MARGIN + (nT * (BOX_HEIGHT + HALF_BOX_HEIGHT)),
             primers = data['primers'],
-            colors = $('.given-primers').map(function() { return $(this).css('border-color'); }).get();
+            // colors = $('.given-primers').map(function() { return $(this).css('border-color'); }).get();
+            colors = $('.pcr').map(function() { return $(this).css('border-top-color'); }).get();
 
         for (let i = 0; i < primers.length; i++) {
-            drawPrimers(primers[i]['fwd'], primers[i]['rev'], scale, verticalOffset + (i * 10), colors[i]);
+            drawPrimers(primers[i]['fwd'], primers[i]['rev'], scale, verticalOffset + (i * 10), css_rgb2hex(colors[i]));
         }
 
         function drawTranscript(tID, coord, scaledCoord, strand, vOffset, color='#428BCA') {
@@ -442,11 +505,18 @@ function addSeqScroll(nT) {
     $('#window').remove();
     $('#genomic-seq').scrollLeft(0);
 
-    // Calculate the number of nucleotides
-    const ruler = $('#ruler'),
-        x = ruler[0].getBoundingClientRect().width - 1, // Account for padding collapse
+    // Calculate the number of nucleotides via a temporary 
+    // element with a nucleotide class
+    const ruler = document.createElement('div');
+    ruler.id = 'ruler';
+    ruler.className = 'A';
+    ruler.innerHTML = 'X';
+    document.body.appendChild(ruler);
+
+    const x = ruler.getBoundingClientRect().width - 1, // Account for padding collapse
         w = $('#genomic-seq').width(),
         n = w/x;
+    document.body.removeChild(ruler);
 
     // Generate the window
     const windowWidth = localStorage.getItem('scale') * n,
@@ -507,21 +577,32 @@ function primerSearch(fwdPrimer, revPrimer, transcripts) {
 }
 
 // Primer form to append
-const primerSearchForm = `<form action='' method='POST'>
-    <div class='form-group'>
-        <label for='fwd-primer' class='pcr-primer-label'>Forward primer</label>
-        <input type='text' class='form-control' id='fwd-primer' value='GCGAATTAAGATAAAGATGAGG' onkeyup='this.value = this.value.toUpperCase();'>
-    </div>
-    <div class='form-group'>
-        <label for='rev-primer' class='pcr-primer-label'>Reverse primer</label>
-        <input type='text' class='form-control' id='rev-primer' value='GGAAAATTGTCGAGTTTGCG' onkeyup='this.value = this.value.toUpperCase();'>
-    </div>
-    <button type='submit' class='btn btn-primary' id='primer-search-submit'>Search</button>
-</form>`;
+const insertPCR = `<div class="pcr">
+    <form action="" method="POST">
+        <div class="primer-input">
+            <label for="fwd-primer">Forward primer</label>
+            <input type="text" id="fwd-primer" value="GCGAATTAAGATAAAGATGAGG">
+        </div>
+        <div class="primer-input">
+            <label for="rev-primer">Reverse primer</label>
+            <input type="text" id="rev-primer" value="GGAAAATTGTCGAGTTTGCG">
+        </div>
+        <button type="submit" id="primer-search-submit">Submit</button>
+    </form>
+    <div class="given-primers"></div>
+    <div class="pcr-results"></div>
+</div>`;
 
-$(document).on('click', '.add-primer-button', function(e) {
-    $(this).siblings('.enter-form-here').html(primerSearchForm);
-    $(this).hide();
+$(document).on('click', '#add-primer-button', function(e) {
+
+    // Only add another PCR form if the last one has run
+    if ($('.pcr').length === 0 || $('.given-primers').last().html().length > 0) {
+
+        // Remove the form from the last pcr element
+        $(insertPCR).insertBefore('#add-primer-button');
+        $('.pcr').last().css('border-top', `3px solid ${getRandomHEX()}`);
+        $('#add-primer-button').hide();
+    }
 });
 
 // Perform PCR
@@ -530,70 +611,88 @@ $(document).on('click', '#primer-search-submit', function(e) {
 
     const fwd = $('#fwd-primer').val(),
         rev = $('#rev-primer').val(),
-        //trsIDS = $('#select-transcripts').find('.list-group-item-dark').map((i, e) => { return $(e).html(); }).get();
         trsIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get();
 
-    let data = JSON.parse(localStorage.getItem('data'));
-    let thisPCR = `PCR result for ${fwd} (forward) and ${rev} (reverse) primers.\nIdentifier\tProduct Size\tFragment Sequence\n`;
-    const fragments = primerSearch(fwd, rev, trsIDS);
-    
-    // Create the PCR HTML element
-    $(this).parents('.PCR').find('.given-primers').append(`<div class='used-fwd-primer'>Forward: ${fwd}</div>`);
-    $(this).parents('.PCR').find('.given-primers').append(`<div class='used-rev-primer'>Reverse: ${fwd}</div>`);
-    $(this).parents('.PCR').find('.given-primers').show();
-    $(this).parents('.PCR').find('.pcr-results').html('');
-    
-    for (tID in fragments) {
-        $(this).parents('.PCR').find('.pcr-results').append(`<div class='pcr-info'>${tID} (<span class='text-muted'>${fragments[tID]['len']}</span>) <span class='caret d-inline-block align-top'>&#9660;</span><p class='fragment'>${fragments[tID]['product']}</p></div>`);
-        thisPCR += `${tID}\t${fragments[tID]['len']}\t${fragments[tID]['product']}\n`;
-    }
+    // Make sure both primers are given
+    if (fwd.length && rev.length) {
 
-    // Store the PCR result in localStorage
-    let existingPCR = localStorage.getItem('PCR');
-    let updatedPCR = existingPCR ? existingPCR + thisPCR : thisPCR;
-    localStorage.setItem('PCR', updatedPCR);
+        let data = JSON.parse(localStorage.getItem('data'));
+        let thisPCR = `PCR result for ${fwd} (forward) and ${rev} (reverse) primers.\nIdentifier\tProduct Size\tFragment Sequence\n`;
+        const fragments = primerSearch(fwd, rev, trsIDS);
+        
+        // Create the PCR HTML element
+        $(this).parents('.pcr').find('.given-primers').append(`<div class='used-fwd-primer'>Forward: ${fwd}</div>`);
+        $(this).parents('.pcr').find('.given-primers').append(`<div class='used-rev-primer'>Reverse: ${rev}</div>`);
+        $(this).parents('.pcr').find('.given-primers').show();
+        $(this).parents('.pcr').find('.pcr-results').html('');
+        
+        for (tID in fragments) {
+            $(this).parents('.pcr').find('.pcr-results').append(`<div class='pcr-info'><span>${tID} (${fragments[tID]['len']})</span> <i class='bi-caret-down-fill'></i><p class='fragment'>${fragments[tID]['product']}</p></div>`);
+            thisPCR += `${tID}\t${fragments[tID]['len']}\t${fragments[tID]['product']}\n`;
+        }
 
-    // Show download link
-    $('#download-pcr').show();
+        // Store the PCR result in localStorage
+        let existingPCR = localStorage.getItem('PCR');
+        let updatedPCR = existingPCR ? existingPCR + thisPCR : thisPCR;
+        localStorage.setItem('PCR', updatedPCR);
 
-    // Calculate the primer positions and add to canvas
-    let absStart = 0,
-        primerPos = {};
-    if (data['gene']['strand'] === '+') {
-        absStart = fragments['Genomic DNA']['offset'];
-        primerPos = {
-            'fwd': [ absStart, absStart + fwd.length ],
-            'rev': [ absStart + fragments['Genomic DNA']['len'] - rev.length, absStart + fragments['Genomic DNA']['len'] ]
-        };
+        // Show download link
+        $('#download-pcr').show();
+
+        // Calculate the primer positions and add to canvas
+        let absStart = 0,
+            primerPos = {};
+        if (data['gene']['strand'] === '+') {
+            absStart = fragments['Genomic DNA']['offset'];
+            primerPos = {
+                'fwd': [ absStart, absStart + fwd.length ],
+                'rev': [ absStart + fragments['Genomic DNA']['len'] - rev.length, absStart + fragments['Genomic DNA']['len'] ]
+            };
+        } else {
+            absStart = data['gene']['seq'].length - (fragments['Genomic DNA']['offset'] + fragments['Genomic DNA']['len']);
+            primerPos = {
+                'fwd': [ absStart, absStart + rev.length ],
+                'rev': [ absStart + (fragments['Genomic DNA']['len'] - rev.length), absStart + fragments['Genomic DNA']['len'] ]
+            };
+        }
+
+        data['primers'].push(primerPos);
+        localStorage.setItem('data', JSON.stringify(data));
+
+        boxify(
+            parseInt($('#size').val()),
+            trsIDS,
+            ($('#draw-CDS').attr('state') === 'on' ? true : false),
+            $('#transcriptColor').val(),
+            $('#cdsColor').val()
+        );
+
+        // Remove the form from the last pcr element, so I do not get element
+        // with duplicate IDs
+        $('.pcr').last().find('form').remove();
+        $('#add-primer-button').css('display', 'flex');
+
     } else {
-        absStart = data['gene']['seq'].length - (fragments['Genomic DNA']['offset'] + fragments['Genomic DNA']['len']);
-        primerPos = {
-            'fwd': [ absStart, absStart + rev.length ],
-            'rev': [ absStart + (fragments['Genomic DNA']['len'] - rev.length), absStart + fragments['Genomic DNA']['len'] ]
-        };
+
+        if (fwd.length === 0) {
+            $('#fwd-primer').css('border-color', ($('#toggle-theme').attr('state') === 'on' ? '#980000' : 'red'));
+        }
+        if (rev.length === 0) {
+            $('#rev-primer').css('border-color', ($('#toggle-theme').attr('state') === 'on' ? '#980000' : 'red'));
+        }
+
     }
-
-    data['primers'].push(primerPos);
-    localStorage.setItem('data', JSON.stringify(data));
-
-    boxify(
-        parseInt($('#size').val()),
-        trsIDS,
-        ($('#draw-CDS').attr('state') === 'on' ? true : false),
-        $('#transcriptColor').val(),
-        $('#cdsColor').val()
-    );
-
-    // Get rid of the form again and display the next primer search
-    $(this).parents().next('.PCR').show();
-    $(this).parent().parent('.enter-form-here').html('');
 
 });
 
 // Show/Hide fragments
-$(document).on('click', '.pcr-info .caret', function() {
-    $(this).parent().find('.fragment').toggle();
-    $(this).html(($(this).html().charCodeAt(0) === 9660 ? '&#9650;' : '&#9660;'));
+$(document).on('click', '.pcr-info', function() {
+    $(this).find('.fragment').toggle();
+    if ($(this).find('i').hasClass('bi-caret-down-fill')) {
+        $(this).find('i').removeClass('bi-caret-down-fill').addClass('bi-caret-up-fill');
+    } else {
+        $(this).find('i').removeClass('bi-caret-up-fill').addClass('bi-caret-down-fill');
+    }
 });
 
 /* RESET SETTINGS */
@@ -620,6 +719,7 @@ $(document).on('click', '#reset-settings', () => {
         $('#show-sequence').click();
         $('#show-sequence').attr('state', 'on');
         $('#window, #genomic-seq').show();
+        $('#pcr-wrapper').removeClass('no-seq');
     }
 
     // Reset transcript and CDS colors
@@ -679,9 +779,13 @@ document.querySelector('#download-pcr').addEventListener('click', (evt) => {
             type: 'text/csv;charset=utf-8;'
         }),
         url = window.URL.createObjectURL(blob),
-        link = evt.target;
+        link = document.createElement('a');
 
     link.target = '_blank';
     link.download = `${$('#search-gene').val()}_PCR_results.txt`;
     link.href = url; 
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 });

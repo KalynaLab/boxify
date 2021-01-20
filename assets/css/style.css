@@ -1,67 +1,282 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+:root {
+    --00dp: #121212;
+    --01dp: #1e1e1e;
+    --02dp: #222222;
+    --03dp: #242424;
+    --04dp: #272727;
+    --06dp: #2c2c2c;
+    --08dp: #2e2e2e;
+    --12dp: #333333;
+    --16dp: #353535;
+    --24dp: #383838;
+    --boxify-blue: #428bca;
+    --boxify-green: #51a351; 
+}
+* { 
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Roboto', sans-serif;
+}
+.container {
+    display: grid;
 
-/* Prevent text selection of draggable items */
-[draggable] {
-    user-select: none;
+    grid-template-areas:
+        "settings content"
+        "footer footer";
+
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: 1fr auto;
+
+    height: 100vh;
 }
 
-/* SIDEBAR */
-#select-transcripts {
+aside {
+    grid-area: settings;
+    border-right: 1px solid black;
+}
+
+aside h2 {
+    text-align: center;
+    padding: 0.25em 0;
+}
+
+/* SEARCH */
+#search, #transcripts, #settings, #downloads, #theme {
+    border-bottom: 1px solid black;
+}
+#search {
+    box-sizing: border-box;
+    padding: 1em;
+}
+#search .bi-search {
+    position: absolute;
+    margin: 0.5em 0em 0.5em 0.75em;
+}
+input[type="search"] {
+    border-radius: 20px; 
+    border: 1px solid black;
+    box-sizing: border-box;
     width: 100%;
-    margin-bottom: 1rem;
+    padding: 0.25em 0.75em 0.25em 1.8em;
+    font-size: 21px;
+    text-transform: uppercase;
 }
-#select-transcripts .list-group-item {
-    padding: .25rem .75rem;
-    font-family: sans-serif;
-    font-size: 12px;
+input[type="search"]:focus {
+    outline: none;
 }
-#sticky-sidebar {
-    min-height: 100vh;
+::-webkit-input-placeholder { /* WebKit browsers */
+    text-transform: none;
 }
-
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    text-transform: none;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+    text-transform: none;
+}
+:-ms-input-placeholder { /* Internet Explorer 10+ */
+    text-transform: none;
+}
+::placeholder { /* Recent browsers */
+    text-transform: none;
+}
 #suggestion-box {
     position: absolute;
+    z-index: 3;
 }
-#error_messages { display: none; }
+#suggestion-box ul {
+    list-style: none;
+    margin-left: 2em;
+}
+.search-suggestion {
+    box-sizing: border-box;
+    padding: 0.5em; 
+    background-color: white;
+    border: 1px solid black;
+    border-bottom: none;
+}
+.search-suggestion:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-bottom: 1px solid black;
+}
+.search-suggestion:hover {
+    cursor: pointer;
+    color: var(--boxify-blue);
+}
 
-.caret { cursor: pointer; }
-#settings { display: none; }
-#settings p { font-size: 0.9rem; }
-.settings-header { cursor: pointer; }
-.settings-content { display: none; }
+#error-messages {
+    display: none;
+    align-items: center;
+    line-height: 0.8em;
+    margin: 1em 0.5em 0 0.75em;
+    color: red;
 
-.toggle {
+    /* Automatically hide after 5 second */
+    -moz-animation: autoHide 0s ease-in 5s forwards;
+    -webkit-animation: autoHide 0s ease-in 5s forwards;
+    -o-animation: autoHide 0s ease-in 5s fowards;
+    animation: autoHide 0s ease-in 5s forwards;
+    -webkit-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
+}
+#error-messages i {
+    margin-right: 0.75em;
+}
+
+/* Not sure if this is going to work on the second error: https://stackoverflow.com/questions/21993661/css-auto-hide-elements-after-5-seconds */
+@keyframes autoHide {
+    to {
+        width: 0;
+        height: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+}
+@-webkit-keyframes autoHide {
+    to {
+        width: 0;
+        height: 0;
+        margin: 0;
+        visibility: hidden;
+    }
+}
+
+/* SETTINGS */
+input:checked + .slider {
+    background-color: var(--boxify-blue);
+}
+#theme {
+    padding: 1em;
+}
+#toggle-theme-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;                
+}
+
+.info {
+    margin-bottom: 0.5em;
+}
+#transcripts, #settings, #downloads, #theme {
+    padding: 1em;
+}
+#transcripts, #settings {
+    display: none;
+}
+#select-transcripts {
+    list-style: none;
+}
+#select-transcripts li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    border: 1px solid black;
+    border-bottom: none;
+    color: rgba(0, 0, 0, 0.25);
+}
+#select-transcripts li.selected {
+    color: rgba(0, 0, 0, 1);
+}
+#select-transcripts li:first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+#select-transcripts li:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-bottom: 1px solid black;
+}
+
+#adjust-size {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
+input[type="range"] {
+    cursor: pointer;
+}
 
-#size { width: 100%; }
-
-.color-form { margin-bottom: 0rem; }
+.toggle, .color-form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0.75em 0 0 0;
+}
 input[type="color"] {
-    width: 23px;
-    float: right;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    margin-right: 7px;
+    border-radius: 10px;
+    border: none;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 1px;
+
+}
+input[type="color"]::-webkit-color-swatch {
+    border-radius: 10px;
+    padding: 2px;
+    border: none;
+}
+
+#reset-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1em;
+    padding-top: 1em;
+    cursor: pointer;
+    border-top: 1px solid black;
+}
+#reset-settings:hover {
+    color: var(--boxify-blue);
+}
+#reset-settings i {
+    margin: -3px 0 0 5px;
 }
 
 #downloads {
     display: none;
+    flex-direction: column;
+}
+#downloads button {
+    padding: 0.5em 0.25em;
+    margin-bottom: 0.2em;
+    cursor: pointer;
+    border: 1px solid black;
+    border-radius: 2px;
+}
+#downloads button:hover {
+   color: var(--boxify-blue);
+}
+
+#downloads button:focus {
+    outline: none;
+}
+#downloads i {
+    margin-right: 0.25em;
 }
 #download-pcr {
     display: none;
 }
 
-
-/* MAIN */
-#main {
-    overflow-x: auto;
-    white-space: nowrap;
+main {
+    grid-area: content;
 }
+
+
+/* MODELS */
 #genomic-seq {
     font-family: 'Roboto Mono', monospace;
     overflow-x: scroll;
     font-size: 14px;
     margin-top: -25px;
+    position: absolute;
 }
 .A, .C, .G, .T {
     padding: 0 1px;
@@ -80,30 +295,77 @@ input[type="color"] {
     z-index: 3;
 }
 
-#primer-search {
+/* PCR */
+#add-primer-button {
     display: none;
-}
-
-.PCR {
-    display: none;
-    font-size: 0.9em;
-    margin-top: 1em;
-}
-
-.add-primer-button {
+    align-items: center;
     cursor: pointer;
+    padding: 1em;
 }
-.vertical-align {
+.bi-plus-circle-fill {
+    font-size: 1.5em;
+    line-height: 0.85em;
+    color: var(--boxify-blue);
+    margin-right: 0.25em;
+}
+
+#pcr-wrapper {
+    padding: 1em;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 350px);
+    grid-gap: 1em;
+}
+.no-seq {
+    margin-top: -2.5em;
+}
+.pcr {
+    border-radius: 5px;
+    box-shadow: 4px 4px 4px 1px rgba(0, 0, 0, 0.5);
+    padding: 1em;
+    font-size: 0.9em;
+    border-top: 3px solid transparent;
+    align-self: start;
+}
+.primer-input {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25em;
+}
+.pcr input[type="text"] {
+    padding: 0.3em;
+    border: 1px solid black;
+    border-radius: 3px;
+}
+.pcr button {
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 0.5em;
+    margin-top: 0.5em;
+    background-color: var(--boxify-blue);
+    cursor: pointer;
+    font-size: 1em;
+    float: right;
+}
+.pcr button:focus {
+    outline: none;
 }
 
 .given-primers {
-    display: none;
-    padding: 0.5em 0;
-    border-top: 5px solid black;
+    margin-bottom: 1em;
 }
-.pcr-info { width: 100%; }
+.pcr-info {
+    width: 100%;
+    margin-bottom: 0.5em;
+    cursor: pointer;
+}
+.pcr-info:last-child {
+    margin-bottom: 0;
+}
+.bi-caret-down-fill {
+    /* cursor: pointer; */
+}
 .fragment {
     font-size: 0.9em;
     word-break: break-all;
@@ -112,6 +374,10 @@ input[type="color"] {
     max-height: 5em;
     overflow-y: auto;
     display: none;
+}
+
+footer {
+    grid-area: footer;
 }
 
 /* Scroll bar customisation */

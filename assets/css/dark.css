@@ -28,6 +28,7 @@ input[type="search"] {
 }
 .search-suggestion:hover {
     background-color: var(--06dp);
+    color: var(--boxify-green);
 }
 #error-messages {
     color: #980000;
@@ -64,6 +65,9 @@ input[type="color"]:focus {
 #reset-settings {
     border-top: 1px solid var(--04dp);
 }
+#reset-settings:hover {
+    color: var(--boxify-green);
+}
 
 #downloads button {
     border: 1px solid var(--04dp);
@@ -77,4 +81,20 @@ input[type="color"]:focus {
 
 #genomic-seq {
     color: black;
+}
+
+/* PCR */
+.bi-plus-circle-fill {
+    color: var(--boxify-green);
+}
+.pcr {
+    background-color: var(--04dp);
+}
+.pcr input[type="text"] {
+    border: 1px solid var(--24dp);
+    background-color: var(--01dp);
+    color: #ddd;
+}
+.pcr button {
+    background-color: var(--boxify-green);
 }

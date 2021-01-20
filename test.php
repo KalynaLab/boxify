@@ -125,7 +125,7 @@
             }
             .search-suggestion:hover {
                 cursor: pointer;
-                color: var(--boxify-green);
+                color: var(--boxify-blue);
             }
 
             #error-messages {
@@ -133,6 +133,7 @@
                 align-items: center;
                 line-height: 0.8em;
                 margin: 1em 0.5em 0 0.75em;
+                color: red;
 
                 /* Automatically hide after 5 second */
                 -moz-animation: autoHide 0s ease-in 5s forwards;
@@ -165,6 +166,9 @@
             }
 
             /* SETTINGS */
+            input:checked + .slider {
+                background-color: var(--boxify-blue);
+            }
             #theme {
                 padding: 1em;
             }
@@ -251,7 +255,7 @@
                 border-top: 1px solid black;
             }
             #reset-settings:hover {
-                color: var(--boxify-green);
+                color: var(--boxify-blue);
             }
             #reset-settings i {
                 margin: -3px 0 0 5px;
@@ -269,7 +273,7 @@
                 border-radius: 2px;
             }
             #downloads button:hover {
-               color: var(--boxify-green);
+               color: var(--boxify-blue);
             }
             
             #downloads button:focus {
@@ -293,6 +297,7 @@
                 overflow-x: scroll;
                 font-size: 14px;
                 margin-top: -25px;
+                position: absolute;
             }
             .A, .C, .G, .T {
                 padding: 0 1px;
@@ -311,6 +316,86 @@
                 z-index: 3;
             }
 
+            /* PCR */
+            #add-primer-button {
+                display: none;
+                align-items: center;
+                cursor: pointer;
+                padding: 1em;
+            }
+            .bi-plus-circle-fill {
+                font-size: 1.5em;
+                line-height: 0.85em;
+                color: var(--boxify-blue);
+                margin-right: 0.25em;
+            }
+
+            #pcr-wrapper {
+                padding: 1em;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, 350px);
+                grid-gap: 1em;
+            }
+            .no-seq {
+                margin-top: -2.5em;
+            }
+            .pcr {
+                border-radius: 5px;
+                box-shadow: 4px 4px 4px 1px rgba(0, 0, 0, 0.5);
+                padding: 1em;
+                font-size: 0.9em;
+                border-top: 3px solid transparent;
+                align-self: start;
+            }
+            .primer-input {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 0.25em;
+            }
+            .pcr input[type="text"] {
+                padding: 0.3em;
+                border: 1px solid black;
+                border-radius: 3px;
+            }
+            .pcr button {
+                color: white;
+                border: none;
+                border-radius: 3px;
+                padding: 0.5em;
+                margin-top: 0.5em;
+                background-color: var(--boxify-blue);
+                cursor: pointer;
+                font-size: 1em;
+                float: right;
+            }
+            .pcr button:focus {
+                outline: none;
+            }
+
+            .given-primers {
+                margin-bottom: 1em;
+            }
+            .pcr-info {
+                width: 100%;
+                margin-bottom: 0.5em;
+                cursor: pointer;
+            }
+            .pcr-info:last-child {
+                margin-bottom: 0;
+            }
+            .bi-caret-down-fill {
+                /* cursor: pointer; */
+            }
+            .fragment {
+                font-size: 0.9em;
+                word-break: break-all;
+                white-space: normal;
+                font-family: Courier New;
+                max-height: 5em;
+                overflow-y: auto;
+                display: none;
+            }
 
             footer {
                 grid-area: footer;
@@ -335,7 +420,7 @@
 
                 <div id="search">
                     <i class="bi-search"></i>
-                    <input type="search" id="search-gene" placeholder="Search gene" aria-label="Search for a gene" autofocus>
+                    <input type="search" id="search-gene" placeholder="Search gene" aria-label="Search for a gene" value="AT3G61860" autofocus>
                     <div id="suggestion-box">
                         <!-- <ul>
                             <li class="search-suggestion">AT1G01010</li>
@@ -431,7 +516,14 @@
                     Your browser does not support HTML5 support.
                 </canvas>
                 <div id="genomic-seq"></div>
-                <div id="ruler" class="A">X</div> <!-- Possibly replace this by pure javascript -->
+
+                <div id="pcr-wrapper">
+
+                    <div id="add-primer-button">
+                        <i class="bi-plus-circle-fill"></i> Add primers
+                    </div>
+
+                </div>
 
                 <div id="svg-image"></div>
 
