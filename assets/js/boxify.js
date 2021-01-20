@@ -82,7 +82,7 @@ function resetPCR() {
 // Set light/dark theme based on the hour of the day
 // Dark theme between 6PM and 8AM
 const current = new Date();
-if (current.getHours() < 8 && current.getHours() > 18) {
+if (current.getHours() < 8 || current.getHours() >= 18) {
     $('#toggle-theme').attr('state', 'on');
     $('#toggle-theme').click();
     toggleTheme();
@@ -101,9 +101,15 @@ $(document).on('click', '.switch', function(e) {
 // Show/Hide genomic sequence
 $(document).on('click', '#show-sequence', function(e) {
     if ($(e.target).is('input')) {
-        $('#window').toggle();
-        $('#genomic-seq').toggle();
-        $('#pcr-wrapper').toggleClass('no-seq');
+        $('#window, #expand-seq, #genomic-seq').toggle();
+        // $('#pcr-wrapper').toggleClass('no-seq');
+
+        if ($('#expand-seq').hasClass('bi-caret-up-fill')) {
+            $('#expand-seq').removeClass('bi-caret-up-fill').addClass('bi-caret-down-fill');
+            $('#display-seq').hide();
+        }
+
+        addSeqScroll($('#select-transcripts').find('li.selected').length);
     }
 });
 
@@ -167,20 +173,20 @@ document.addEventListener('drop', (e) => {
     }
 });
 
-// Transcript selection
-// DELETE THIS AFTER REDESIGN
-$(document).on('click', '#select-transcripts button', function() {
-
-    // Make sure at least one transcript is selected
-    if ($('#select-transcripts button.list-group-item-dark').length > 1) {
-        $(this).toggleClass('list-group-item-dark');
+$(document).on('click', '#expand-seq', function() {
+    if ($(this).hasClass('bi-caret-down-fill')) {
+        $(this).removeClass('bi-caret-down-fill').addClass('bi-caret-up-fill');
     } else {
-        $(this).addClass('list-group-item-dark');
+        $(this).removeClass('bi-caret-up-fill').addClass('bi-caret-down-fill');
     }
-
+    $('#display-seq').toggle();
 });
 
+// Transcript selection
 $(document).on('click', '#select-transcripts li', function() {
+
+    // Toggle upper/lowercase sequence and possible PCR result
+    let clickedT = $(this).find('span').html();
 
     if ($('#select-transcripts li.selected').length > 1) {
         if ($(this).hasClass('selected')) {
@@ -190,11 +196,13 @@ $(document).on('click', '#select-transcripts li', function() {
             $(this).addClass('selected');
             $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
         }
+        $(`[data-transcript-id="${clickedT}"]`).toggle();
         redraw();
     } else {
         $(this).addClass('selected');
         $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
         redraw();
+        $(`[data-transcript-id="${clickedT}"]`).show();
     }
 
 });
@@ -221,22 +229,6 @@ function redraw() {
         addSeqScroll(trsIDS.length);
     }
 }
-
-$(document).on('click', '#redraw', () => {
-
-    // Select the active transcripts
-    let trsIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get();
-    
-    boxify(
-        parseInt($('#size').val()),
-        trsIDS,
-        ($('#draw-CDS').attr('state') === 'on' ? true : false),
-        $('#transcriptColor').val(),
-        $('#cdsColor').val()
-    );
-    addSeqScroll(trsIDS.length);
-
-});
 
 /* LOAD DATA */
 // Autocomplete
@@ -291,23 +283,37 @@ function loadData() {
             for (let i = 0; i < trsIDS.length; i++) {
                 let tID = trsIDS[i],
                     exons = data['transcripts'][tID]['exons'],
-                    splicedSeq = '';
+                    splicedSeq = '',
+                    displaySeq = ' '.repeat((exons[0][0] - geneStart - 1 >= 0 ? exons[0][0] - geneStart - 1 : exons[0][0] - geneStart));
 
                 for (let j in exons) {
                     const start = exons[j][0],
-                        end = exons[j][1];
-                    splicedSeq += seq.slice(start-geneStart, (end-geneStart)+1);
+                        end = exons[j][1],
+                        relStart = (start - geneStart - 1 < 0 ? start - geneStart : start - geneStart - 1);
+
+                    if (j > 0) { 
+                        const intronStart = exons[(j - 1)][1],
+                            intronEnd = exons[j][0] - 1;
+                        displaySeq += seq.slice(intronStart - geneStart, intronEnd - geneStart).toLowerCase();
+                    }
+
+                    splicedSeq += seq.slice(relStart, (end - geneStart));
+                    displaySeq += seq.slice(relStart, (end - geneStart)).toUpperCase();
                 }
 
                 data['transcripts'][tID]['seq'] = (strand === '+') ? splicedSeq : splicedSeq.split('').reverse().join('');
+                data['transcripts'][tID]['display-seq'] = `<div class="display-seq" data-transcript-id="${tID}">${displaySeq.split('').map(nt => `<pre class='X'>${nt}</pre>`).join('')}</div>`;
+                //$('#display-seq').append(`<div class="display-seq" data-transcript-id="${tID}">${displaySeq.split('').map(nt => `<pre class='X'>${nt}</pre>`).join('')}</div>`);
             }
 
             // Store the data in localStorage
             localStorage.setItem('data', JSON.stringify(data));
 
+
             // Add the genomic sequence to the document and assign class per nucleotide
             $('#genomic-seq').html(seq.split('').map(nt => `<span class='${nt}'>${nt}</span>`).join(''));
-            $('#genomic-seq').offset({ top: 'inherit', left: $('main')[0].getBoundingClientRect().left + DEFAULT_LEFT_MARGIN });
+            $('#sequences').offset({ left: $('main')[0].getBoundingClientRect().left + DEFAULT_LEFT_MARGIN });
+            $('#expand-seq').show();
 
             // Draw models
             boxify(
@@ -317,8 +323,6 @@ function loadData() {
                 $('#transcriptColor').val(),
                 $('#cdsColor').val()
             );
-
-            addSeqScroll(trsIDS.length);
 
             // Display settings
             // List the loaded transcripts
@@ -333,6 +337,7 @@ function loadData() {
             $('#transcripts, #settings').show();
             resetPCR(); // Might not need this function, because I think I'm only calling it once
             $('#downloads').css('display', 'flex');
+            addSeqScroll(trsIDS.length);
         
         } else { // Show error
             $('#error-messages').html(`<i class="bi-exclamation-triangle-fill"></i><span>${data['messages']}</span>`);
@@ -357,7 +362,7 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
 
     // Scale the genomic sequence element to the same size as the 
     // transcript models and set the left margin
-    $('#genomic-seq').css('width', $('#size').val()-100);
+    $('#sequences, #genomic-seq, #display-seq').css('width', $('#size').val()-100);
 
     // Get data
     data = JSON.parse(localStorage.getItem('data'));
@@ -506,7 +511,7 @@ function addSeqScroll(nT) {
 
     // Remove any potentially existing window and reset scrolling
     $('#window').remove();
-    $('#genomic-seq').scrollLeft(0);
+    $('#sequences').scrollLeft(0);
 
     // Calculate the number of nucleotides via a temporary 
     // element with a nucleotide class
@@ -517,7 +522,7 @@ function addSeqScroll(nT) {
     document.body.appendChild(ruler);
 
     const x = ruler.getBoundingClientRect().width - 1, // Account for padding collapse
-        w = $('#genomic-seq').width(),
+        w = parseInt($('#size').val()) - 100,
         n = w/x;
     document.body.removeChild(ruler);
 
@@ -529,16 +534,37 @@ function addSeqScroll(nT) {
     $('main').append(`<div id='window' style='width: ${windowWidth}px; height: ${windowHeight}px;'></div>`);
     $('#window').offset({ top: DEFAULT_TOP_MARGIN - (BOX_HEIGHT / 4), left: left })
 
+    // Place the expand-seq caret
+    const seqRect = $('#boxify')[0].getBoundingClientRect();
+    $('#expand-seq').offset({ top: seqRect.bottom - 20, left: seqRect.left + 100 });
+
     // See if the window needs to be hidden
     if ($('#show-sequence').attr('state') === 'off') {
-        $('#window').hide();
+        $('#window, #expand-seq, #display-seq').hide();
     }
+
+    // Add the display-seq
+    data = JSON.parse(localStorage.getItem('data'));
+    visibleIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get(),
+    trsIDS = $('#select-transcripts').find('li > span').map((i, e) => { return $(e).html(); }).get();
+
+    $('#display-seq').html('');
+    for (let i = 0; i < trsIDS.length; i++) {
+        let tID = trsIDS[i];
+        $('#display-seq').append(data['transcripts'][tID]['display-seq']);
+
+        // Hide
+        if (!visibleIDS.includes(tID)) {
+            $(`[data-transcript-id="${tID}"]`).hide();
+        }
+    }
+
 }
 
 // Scroll the window
-$('#genomic-seq').on('scroll', () => {
+$('#sequences').on('scroll', () => {
     
-    const scrollPerc = $('#genomic-seq').scrollLeft() / ($('#genomic-seq')[0].scrollWidth - $('#genomic-seq').width()),
+    const scrollPerc = $('#sequences').scrollLeft() / ($('#sequences')[0].scrollWidth - $('#sequences').width()),
     px = $('#genomic-seq').width(),
     left = $('#boxify')[0].getBoundingClientRect().left + 125,
     newLeft = left + ((px - $('#window').width()) * scrollPerc);
@@ -614,7 +640,8 @@ $(document).on('click', '#primer-search-submit', function(e) {
 
     const fwd = $('#fwd-primer').val(),
         rev = $('#rev-primer').val(),
-        trsIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get();
+        visibleIDS = $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get(),
+        trsIDS = $('#select-transcripts').find('li > span').map((i, e) => { return $(e).html(); }).get();
 
     // Make sure both primers are given
     if (fwd.length && rev.length) {
@@ -630,8 +657,13 @@ $(document).on('click', '#primer-search-submit', function(e) {
         $(this).parents('.pcr').find('.pcr-results').html('');
         
         for (tID in fragments) {
-            $(this).parents('.pcr').find('.pcr-results').append(`<div class='pcr-info'><span>${tID} (${fragments[tID]['len']})</span> <i class='bi-caret-down-fill'></i><p class='fragment'>${fragments[tID]['product']}</p></div>`);
+            $(this).parents('.pcr').find('.pcr-results').append(`<div class='pcr-info' data-transcript-id='${tID}'><span>${tID} (${fragments[tID]['len']})</span> <i class='bi-caret-down-fill'></i><p class='fragment'>${fragments[tID]['product']}</p></div>`);
             thisPCR += `${tID}\t${fragments[tID]['len']}\t${fragments[tID]['product']}\n`;
+
+            // Hide
+            if (tID !== 'Genomic DNA' && !visibleIDS.includes(tID)) {
+                $(`[data-transcript-id="${tID}"]`).hide();
+            }
         }
 
         // Store the PCR result in localStorage
@@ -664,11 +696,12 @@ $(document).on('click', '#primer-search-submit', function(e) {
 
         boxify(
             parseInt($('#size').val()),
-            trsIDS,
+            visibleIDS,
             ($('#draw-CDS').attr('state') === 'on' ? true : false),
             $('#transcriptColor').val(),
             $('#cdsColor').val()
         );
+        addSeqScroll(visibleIDS.length);
 
         // Remove the form from the last pcr element, so I do not get element
         // with duplicate IDs
@@ -705,6 +738,7 @@ $(document).on('click', '#reset-settings', () => {
     $('#select-transcripts').find('li').each(function(i) {
         $(this).addClass('selected');
         $(this).find('i').removeClass('bi-eye-slash').addClass('bi-eye');
+        $(`[data-transcript-id="${$(this).find('span').html()}"]`).show();
     });
 
     // Set size back to 800px
@@ -721,9 +755,11 @@ $(document).on('click', '#reset-settings', () => {
     if ($('#show-sequence').attr('state') === 'off') {
         $('#show-sequence').click();
         $('#show-sequence').attr('state', 'on');
-        $('#window, #genomic-seq').show();
-        $('#pcr-wrapper').removeClass('no-seq');
+        $('#window, #expand-seq, #genomic-seq').show();
+        // $('#pcr-wrapper').removeClass('no-seq');
     }
+    $('#expand-seq').removeClass('bi-caret-up-fill').addClass('bi-caret-down-fill');
+    $('#display-seq').hide();
 
     // Reset transcript and CDS colors
     $('#transcriptColor').val('#428bca');

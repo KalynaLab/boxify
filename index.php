@@ -105,7 +105,11 @@
                 <canvas id="boxify">
                     Your browser does not support HTML5 support.
                 </canvas>
-                <div id="genomic-seq"></div>
+                <i id="expand-seq" class="bi-caret-down-fill"></i>
+                <div id="sequences">
+                    <div id="genomic-seq"></div>
+                    <div id="display-seq"></div>
+                </div>
 
                 <div id="pcr-wrapper">
 

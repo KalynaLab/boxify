@@ -166,6 +166,10 @@ input:checked + .slider {
 #transcripts, #settings {
     display: none;
 }
+#transcripts {
+    max-height: 400px;
+    overflow-y: scroll;
+}
 #select-transcripts {
     list-style: none;
 }
@@ -271,16 +275,45 @@ main {
 
 
 /* MODELS */
-#genomic-seq {
+#sequences {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 14px;
+    margin-top: -25px;
+    /* position: absolute; */
+    overflow-x: scroll;
+}
+.display-seq {
+    white-space: nowrap;
+}
+#genomic-seq, #display-seq {
+    /* overflow-x: scroll; */
+}
+#expand-seq {
+    position: absolute;
+    display: none;
+    cursor: pointer;
+}
+#display-seq {
+    display: none;
+}
+/* #genomic-seq {
     font-family: 'Roboto Mono', monospace;
     overflow-x: scroll;
     font-size: 14px;
     margin-top: -25px;
     position: absolute;
 }
-.A, .C, .G, .T {
+#display-seq {
+    font-family: 'Roboto Mono', monospace;
+    overflow-x: scroll;
+    font-size: 14px;
+    position: absolute;
+    white-space: nowrap;
+} */
+.A, .C, .G, .T, .X {
     padding: 0 1px;
 }
+pre { display: inline-block; }
 .A { background: #90ee90; }
 .C { background: #b0c4de; }
 .G { background: #ffec8b; }
@@ -370,7 +403,7 @@ main {
     font-size: 0.9em;
     word-break: break-all;
     white-space: normal;
-    font-family: Courier New;
+    font-family: 'Roboto Mono', monospace;
     max-height: 5em;
     overflow-y: auto;
     display: none;
