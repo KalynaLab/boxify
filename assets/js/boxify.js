@@ -79,11 +79,14 @@ function resetPCR() {
 ['data', 'scale', 'PCR'].forEach(k => localStorage.removeItem(k));
 
 /* SETTINGS */
-// Expand/Collapse settings
-$(document).on('click', '.settings-header', () => {
-    $('.settings-content').toggle();
-    $(this).find('.caret').html(($('.caret').html().charCodeAt(0) === 9660 ? '&#9650;' : '&#9660;'));
-});
+// Set light/dark theme based on the hour of the day
+// Dark theme between 6PM and 8AM
+const current = new Date();
+if (current.getHours() < 8 && current.getHours() > 18) {
+    $('#toggle-theme').attr('state', 'on');
+    $('#toggle-theme').click();
+    toggleTheme();
+}
 
 // Toggle switch control
 $(document).on('click', '.switch', function(e) {
