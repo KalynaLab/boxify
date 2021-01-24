@@ -1,12 +1,13 @@
 /* GLOBAL DRAWING VARIABLES */
-const BOX_HEIGHT = 12;
+const BOX_HEIGHT = 14;
 const HALF_BOX_HEIGHT = BOX_HEIGHT / 2;
 const DEFAULT_TOP_MARGIN = 25;
 const DEFAULT_LEFT_MARGIN = 125;
 const DEFAULT_BORDER_MARGIN = 25;
+const STROKE_WIDTH = 1;
 
 /**
- * Converts an HSL color value to RGB. Conversion formula
+ * ConadjVOffsets an HSL color value to RGB. Conversion formula
  * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
  * Assumes h, s, and l are contained in the set [0, 1] and
  * returns r, g, and b in the set [0, 255].
@@ -85,7 +86,7 @@ const current = new Date();
 if (current.getHours() < 8 || current.getHours() >= 18) {
     $('#toggle-theme').attr('state', 'on');
     $('#toggle-theme').click();
-    toggleTheme();
+    //toggleTheme();
 }
 
 // Toggle switch control
@@ -223,8 +224,10 @@ function redraw() {
             parseInt($('#size').val()),
             trsIDS,
             ($('#draw-CDS').attr('state') === 'on' ? true : false),
-            $('#transcriptColor').val(),
-            $('#cdsColor').val()
+            $('#transcript-fill-color').val(),
+            $('#transcript-stroke-color').val(),
+            $('#cds-fill-color').val(),
+            $('#cds-stroke-color').val()
         );
         addSeqScroll(trsIDS.length);
     }
@@ -320,8 +323,10 @@ function loadData() {
                 parseInt($('#size').val()),
                 trsIDS,
                 ($('#draw-CDS').attr('state') === 'on' ? true : false),
-                $('#transcriptColor').val(),
-                $('#cdsColor').val()
+                $('#transcript-fill-color').val(),
+                $('#transcript-stroke-color').val(),
+                $('#cds-fill-color').val(),
+                $('#cds-stroke-color').val()
             );
 
             // Display settings
@@ -358,7 +363,7 @@ $(document).keypress((e) => {
 });
 
 /* DRAW STUFF */
-function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#51A351') {
+function boxify(size, trsIDS, drawTheCDS=true, exonFill='#428bca', exonStroke='#428bca', cdsFill='#51A351', cdsStroke='#51A351') {
 
     // Scale the genomic sequence element to the same size as the 
     // transcript models and set the left margin
@@ -388,7 +393,7 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
 
     function eventWindowLoaded() {
         const canvasWidth = size + (DEFAULT_BORDER_MARGIN * 2),
-            canvasHeight = (nT * (BOX_HEIGHT + HALF_BOX_HEIGHT)) + (data['primers'].length * 10) + (DEFAULT_BORDER_MARGIN * 2) - 6;
+            canvasHeight = (nT * (BOX_HEIGHT + HALF_BOX_HEIGHT)) + (data['primers'].length * 10) + (DEFAULT_BORDER_MARGIN * 2) - HALF_BOX_HEIGHT;
         canvasApp(canvasWidth, canvasHeight);
     }
 
@@ -413,39 +418,44 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
         // Start drawing
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(0.5, 0.5);
 
         // Draw each transcript
         for (let i = 0; i < trsIDS.length; i++) {
             let tID = trsIDS[i];
-            drawTranscript(tID, data['transcripts'][tID]['exons'], data['scaledExonCoord'], data['gene']['strand'], DEFAULT_BORDER_MARGIN + (i * (BOX_HEIGHT + HALF_BOX_HEIGHT)), exonColor);
+            drawTranscript(tID, data['transcripts'][tID]['exons'], data['scaledExonCoord'], data['gene']['strand'], DEFAULT_BORDER_MARGIN + (i * (BOX_HEIGHT + HALF_BOX_HEIGHT)), exonFill, exonStroke);
         }
 
         // Draw the CDS
         if (drawTheCDS) {
             for (let i = 0; i < trsIDS.length; i++) {
                 tID = trsIDS[i];
-                drawCDS(data['transcripts'][tID]['cds'], data['scaledCDSCoord'], DEFAULT_BORDER_MARGIN + (i * (BOX_HEIGHT + HALF_BOX_HEIGHT)), cdsColor);
+                drawCDS(data['transcripts'][tID]['cds'], data['scaledCDSCoord'], DEFAULT_BORDER_MARGIN + (i * (BOX_HEIGHT + HALF_BOX_HEIGHT)), cdsFill, cdsStroke);
             }
         }
 
         // Draw the primer boxes, if any
-        const verticalOffset = DEFAULT_BORDER_MARGIN + (nT * (BOX_HEIGHT + HALF_BOX_HEIGHT)),
+        const adjVOffseticalOffset = DEFAULT_BORDER_MARGIN + (nT * (BOX_HEIGHT + HALF_BOX_HEIGHT)),
             primers = data['primers'],
             // colors = $('.given-primers').map(function() { return $(this).css('border-color'); }).get();
             colors = $('.pcr').map(function() { return $(this).css('border-top-color'); }).get();
 
         for (let i = 0; i < primers.length; i++) {
-            drawPrimers(primers[i]['fwd'], primers[i]['rev'], scale, verticalOffset + (i * 10), css_rgb2hex(colors[i]));
+            drawPrimers(primers[i]['fwd'], primers[i]['rev'], scale, adjVOffseticalOffset + (i * 10) - STROKE_WIDTH, css_rgb2hex(colors[i]));
         }
 
-        function drawTranscript(tID, coord, scaledCoord, strand, vOffset, color='#428BCA') {
+        function drawTranscript(tID, coord, scaledCoord, strand, vOffset, fillColor="#428BCA", strokeColor="#428BCA", fontColor="#000") {
 
+            // Transcript ID
             ctx.font = '12px sans-serif';
-            ctx.fillStyle = ($('#toggle-theme').attr('state') === 'on' ? 'white' : 'black');
-            ctx.textBaseLine = 'top';
-            ctx.fillText(tID, DEFAULT_BORDER_MARGIN, vOffset+12, 100);
-            ctx.fillStyle = color;
-            ctx.strokeStyle = 'rgba(1, 1, 1, 0)';
+            ctx.fillStyle = fontColor;
+            ctx.txtBaseLine = 'top';
+            ctx.fillText(tID, DEFAULT_BORDER_MARGIN, vOffset+10, 100);
+
+            // Boxes
+            ctx.lineJoin = "round";
+            ctx.fillStyle = fillColor;
+            ctx.strokeStyle = strokeColor;
 
             let endOfLastExon = 0;
             for (let i in coord) {
@@ -453,46 +463,88 @@ function boxify(size, trsIDS, drawTheCDS=true, exonColor='#428bca', cdsColor='#5
                     end = scaledCoord[String(coord[i][1])];
 
                 // Draw exons
-                if (strand === '-' && i == 0) { // Negative strand triangle
-                    start += HALF_BOX_HEIGHT;
+                const half = (end - start >= HALF_BOX_HEIGHT ? HALF_BOX_HEIGHT : end - start); // Account for exons shorter than HALF_BOX_HEIGHT
+                start += STROKE_WIDTH;
+                end -= STROKE_WIDTH;
+
+                const adjVOffset = vOffset + STROKE_WIDTH;
+                const adjHBH = HALF_BOX_HEIGHT - STROKE_WIDTH;
+                const adjBH = BOX_HEIGHT - 2 * STROKE_WIDTH;
+
+                if (strand === '-' && i == 0) { // Last exon of antisense transcript
+                    ctx.beginPath();
+                    ctx.moveTo(start, vOffset + adjHBH);
+                    ctx.lineTo(start + half, vOffset);
+                    ctx.lineTo(end, vOffset);
+                    ctx.lineTo(end, vOffset + adjBH);
+                    ctx.lineTo(start + half, vOffset + adjBH);
+                    ctx.lineTo(start, vOffset + adjHBH);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                } else if (strand === '+' && i == coord.length - 1) { // Last exon of sense transcript
                     ctx.beginPath();
                     ctx.moveTo(start, vOffset);
-                    ctx.lineTo(start - HALF_BOX_HEIGHT, vOffset + HALF_BOX_HEIGHT);
-                    ctx.lineTo(start, vOffset + BOX_HEIGHT);
+                    ctx.lineTo(end - half, vOffset);
+                    ctx.lineTo(end, vOffset + adjHBH);
+                    ctx.lineTo(end - half, vOffset + adjBH);
+                    ctx.lineTo(start, vOffset + adjBH);
+                    ctx.lineTo(start, vOffset);
+                    ctx.closePath();
                     ctx.fill();
-                } else if (strand === '+' && i == coord.length - 1)  { // Positive strand triangle
-                    end -= HALF_BOX_HEIGHT;
+                    ctx.stroke();
+                } else {
                     ctx.beginPath();
-                    ctx.moveTo(end, vOffset);
-                    ctx.lineTo(end + HALF_BOX_HEIGHT, vOffset + HALF_BOX_HEIGHT);
-                    ctx.lineTo(end, vOffset + BOX_HEIGHT);
+                    ctx.moveTo(start, vOffset); 
+                    ctx.lineTo(end, vOffset);
+                    ctx.lineTo(end, vOffset + adjBH);
+                    ctx.lineTo(start, vOffset + adjBH);
+                    ctx.lineTo(start, vOffset);
+                    ctx.closePath();
                     ctx.fill();
+                    ctx.stroke();
                 }
-                ctx.fillRect(start, vOffset, end - start, BOX_HEIGHT);
 
                 // Draw introns
                 if (i > 0 && i < coord.length) {
                     ctx.beginPath();
-                    ctx.strokeStyle = color;
-                    ctx.moveTo(endOfLastExon, vOffset + HALF_BOX_HEIGHT);
-                    ctx.quadraticCurveTo(endOfLastExon, vOffset + HALF_BOX_HEIGHT, start, vOffset + HALF_BOX_HEIGHT);
+                    ctx.moveTo(endOfLastExon, vOffset + HALF_BOX_HEIGHT - STROKE_WIDTH);
+                    ctx.quadraticCurveTo(endOfLastExon, vOffset + HALF_BOX_HEIGHT - STROKE_WIDTH, start, vOffset + HALF_BOX_HEIGHT - STROKE_WIDTH);
                     ctx.stroke();
                     ctx.closePath();
                 }
 
                 endOfLastExon = end;
+
             }
+
         }
 
-        function drawCDS(coordX, scaledCoordX, vOffsetX, color='#51A351') {
-            ctx.fillStyle = color;
-            ctx.strokeStyle = 'rgba(1, 1, 1, 0)';
+        function drawCDS(coordX, scaledCoordX, vOffsetX, fillColor="#51A351", strokeColor="#51A351") {
+
+            ctx.fillStyle = fillColor;
+            ctx.strokeStyle = strokeColor;
+            const adjBH = BOX_HEIGHT - 2 * STROKE_WIDTH;
 
             for (let i in coordX) {
                 let start = scaledCoordX[String(coordX[i][0])],
                     end = scaledCoordX[String(coordX[i][1])];
-                ctx.fillRect(start, vOffsetX, end - start, BOX_HEIGHT);
+
+                start += STROKE_WIDTH;
+                end -= STROKE_WIDTH;
+                
+                ctx.beginPath();
+                ctx.moveTo(start, vOffsetX); 
+                ctx.lineTo(end, vOffsetX);
+                ctx.lineTo(end, vOffsetX + adjBH);
+                ctx.lineTo(start, vOffsetX + adjBH);
+                ctx.lineTo(start, vOffsetX);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
             }
+
         }
 
         function drawPrimers(fwd, rev, scaleFactor, vOffsetX, color) {
@@ -574,7 +626,7 @@ $('#sequences').on('scroll', () => {
 
 /* AUTO-REDRAW */
 // On CDS change
-$(document).on('change', '#draw-CDS, #transcriptColor, #cdsColor', () => {
+$(document).on('change', '#draw-CDS, #transcript-fill-color, #transcript-stroke-color, #cds-fill-color, #cds-stroke-color', () => {
     redraw();
 });
 
@@ -698,8 +750,10 @@ $(document).on('click', '#primer-search-submit', function(e) {
             parseInt($('#size').val()),
             visibleIDS,
             ($('#draw-CDS').attr('state') === 'on' ? true : false),
-            $('#transcriptColor').val(),
-            $('#cdsColor').val()
+            $('#transcript-fill-color').val(),
+            $('#transcript-stroke-color').val(),
+            $('#cds-fill-color').val(),
+            $('#cds-stroke-color').val()
         );
         addSeqScroll(visibleIDS.length);
 
@@ -762,8 +816,8 @@ $(document).on('click', '#reset-settings', () => {
     $('#display-seq').hide();
 
     // Reset transcript and CDS colors
-    $('#transcriptColor').val('#428bca');
-    $('#cdsColor').val('#51a351');
+    $('#transcript-fill-color, #transcript-stroke-color').val('#428bca');
+    $('#cds-fill-color, #cds-stroke-color').val('#51a351');
 
     redraw();
 

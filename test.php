@@ -185,7 +185,7 @@
                 padding: 1em;
             }
             #transcripts, #settings {
-                display: none;
+                /* display: none; */
             }
             #select-transcripts {
                 list-style: none;
@@ -221,28 +221,9 @@
                 cursor: pointer;
             }
 
-            .toggle, .color-form {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin: 0.75em 0 0 0;
-            }
-            input[type="color"] {
-                width: 16px;
-                height: 16px;
-                cursor: pointer;
-                margin-right: 7px;
-                border-radius: 10px;
-                border: none;
-            }
-            input[type="color"]::-webkit-color-swatch-wrapper {
-                padding: 1px;
 
-            }
-            input[type="color"]::-webkit-color-swatch {
-                border-radius: 10px;
-                padding: 2px;
-                border: none;
+            .bi-square {
+                font-weight: bold;
             }
 
             #reset-settings {
@@ -411,6 +392,65 @@
                 background: gray;
                 border-radius: 5px;
             }
+
+            input[type="color"] {
+                -webkit-appearance: none;
+                padding: 0;
+                outline: none;
+                border: none;
+                border-radius: 50%;
+                width: 14px;
+                height: 14px;
+                cursor: pointer;
+            }
+            input[type="color"]::-webkit-color-swatch {
+                border: none;
+                border-radius: 50%;
+                padding: 0;
+            }
+            input[type="color"]::-webkit-color-swatch-wrapper {
+                border-radius: 50%;
+                padding: 0;
+            }
+
+
+
+            .toggle {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin: 0.75em 0;
+            }
+            .colors {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 0.5em;
+            }
+            .color-form {
+                display: flex;
+                align-items: center;
+            }
+            .w50 {
+                flex-grow: 2;
+            }
+            .color-form label {
+                margin: 0 0.35em;
+                cursor: pointer;
+            }
+            .fill-color, .stroke-color {
+                width: 16px;
+                height: 16px;
+                box-sizing: border-box;
+                border-radius: 3px;
+            }
+            .fill-color {
+                background-color: black;
+            }
+            .stroke-color {
+                border: 3px solid black;
+            }
         </style>
     </head>
     <body>
@@ -472,14 +512,32 @@
                         </label>
                     </div>
 
-                    <div class="color-form">
-                        <label for="transcriptColor">Transcript color</label>
-                        <input type="color" id="transcriptColor" value="#428bca">
+
+                    <p class="info">Adjust the transcript models fill and stroke colors</p>
+                    <div class="colors">
+                        <span class="w50">Transcript</span>
+                        <div class="color-form">
+                            <label for="transcript-fill-color">Fill</label>
+                            <input type="color" id="transcript-fill-color" value="#428bca">
+                        </div>
+
+                        <div class="color-form">
+                            <label for="transcript-stroke-color">Stroke</label>
+                            <input type="color" id="transcript-stroke-color" value="#428bca">
+                        </div>
                     </div>
 
-                    <div class="color-form">
-                        <label for="cdsColor">CDS color</label>
-                        <input type="color" id="cdsColor" value="#51a351">
+                    <div class="colors">
+                        <span class="w50">CDS</span>
+                        <div class="color-form">
+                            <label for="cds-fill-color">Fill</label>
+                            <input type="color" id="cds-fill-color" value="#51a351">
+                        </div>
+
+                        <div class="color-form">
+                            <label for="cds-stroke-color">Stroke</label>
+                            <input type="color" id="cds-stroke-color" value="#51a351">
+                        </div>
                     </div>
 
                     <div id="reset-settings">
@@ -535,6 +593,39 @@
         <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
         <script src="assets/js/functions.js"></script>
         <script src="assets/js/canvas-getsvg.js"></script>
-        <script src="assets/js/boxify.js"></script>
+        <!-- <script src="assets/js/boxify.js"></script> -->
+        <script>
+
+            $(document).on('change', 'input[type="color"]', function() {
+                console.log($(this).val());
+                $(`[for="${$(this).attr('id')}"]`).find('i').css('color', $(this).val()); 
+            });
+
+            // const BOX_HEIGHT = 12;
+            // const HALF_BOX_HEIGHT = BOX_HEIGHT / 2;
+
+            // const canvas = document.getElementById('boxify');
+            // canvas.width = 800;
+            // canvas.height = 400;
+
+            // const ctx = canvas.getContext('2d');
+            // ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // ctx.translate(0.5, 0.5);
+
+            // ctx.fillStyle = 'red';
+            // ctx.lineWidth = 1;
+            // ctx.strokeStyle = 'black';
+
+            // ctx.beginPath();
+            // ctx.moveTo(10, 10);
+            // ctx.lineTo(10, 50);
+            // ctx.lineTo(16, 56);
+            // ctx.lineTo(22, 50);
+            // ctx.lineTo(16, 10);
+            // ctx.lineTo(10, 10);
+            // ctx.fill();
+            // ctx.stroke();
+
+        </script>
     </body>
 </html>

@@ -62,14 +62,31 @@
                         </label>
                     </div>
 
-                    <div class="color-form">
-                        <label for="transcriptColor">Transcript color</label>
-                        <input type="color" id="transcriptColor" value="#428bca">
+                    <p class="info">Adjust the transcript models fill and stroke colors</p>
+                    <div class="colors">
+                        <span class="w50">Transcript</span>
+                        <div class="color-form">
+                            <label for="transcript-fill-color">Fill</label>
+                            <input type="color" id="transcript-fill-color" value="#428bca">
+                        </div>
+
+                        <div class="color-form">
+                            <label for="transcript-stroke-color">Stroke</label>
+                            <input type="color" id="transcript-stroke-color" value="#428bca">
+                        </div>
                     </div>
 
-                    <div class="color-form">
-                        <label for="cdsColor">CDS color</label>
-                        <input type="color" id="cdsColor" value="#51a351">
+                    <div class="colors">
+                        <span class="w50">CDS</span>
+                        <div class="color-form">
+                            <label for="cds-fill-color">Fill</label>
+                            <input type="color" id="cds-fill-color" value="#51a351">
+                        </div>
+
+                        <div class="color-form">
+                            <label for="cds-stroke-color">Stroke</label>
+                            <input type="color" id="cds-stroke-color" value="#51a351">
+                        </div>
                     </div>
 
                     <div id="reset-settings">

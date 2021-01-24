@@ -204,28 +204,61 @@ input[type="range"] {
     cursor: pointer;
 }
 
-.toggle, .color-form {
+.toggle {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0.75em 0 0 0;
+    margin: 0.75em 0;
 }
-input[type="color"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    margin-right: 7px;
-    border-radius: 10px;
-    border: none;
-}
-input[type="color"]::-webkit-color-swatch-wrapper {
-    padding: 1px;
 
+input[type="color"] {
+    -webkit-appearance: none;
+    padding: 0;
+    outline: none;
+    border: none;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
 }
 input[type="color"]::-webkit-color-swatch {
-    border-radius: 10px;
-    padding: 2px;
     border: none;
+    border-radius: 50%;
+    padding: 0;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+    border-radius: 50%;
+    padding: 0;
+}
+.colors {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5em;
+}
+.color-form {
+    display: flex;
+    align-items: center;
+}
+.w50 {
+    flex-grow: 2;
+}
+.color-form label {
+    margin: 0 0.35em;
+    cursor: pointer;
+}
+.fill-color, .stroke-color {
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border-radius: 3px;
+}
+.fill-color {
+    background-color: black;
+}
+.stroke-color {
+    border: 3px solid black;
 }
 
 #reset-settings {
