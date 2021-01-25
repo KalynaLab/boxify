@@ -269,6 +269,7 @@
 
             main {
                 grid-area: content;
+                padding: 1em;
             }
 
 

@@ -305,6 +305,7 @@ input[type="color"]::-webkit-color-swatch-wrapper {
 main {
     grid-area: content;
 }
+#save-image { display: none; }
 
 
 /* MODELS */

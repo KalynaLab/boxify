@@ -136,7 +136,7 @@
 
                 </div>
 
-                <div id="svg-image"></div>
+                <canvas id="save-image"></canvas>
 
             </main>
 

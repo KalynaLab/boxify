@@ -86,7 +86,7 @@ const current = new Date();
 if (current.getHours() < 8 || current.getHours() >= 18) {
     $('#toggle-theme').attr('state', 'on');
     $('#toggle-theme').click();
-    //toggleTheme();
+    toggleTheme();
 }
 
 // Toggle switch control
@@ -221,13 +221,15 @@ function redraw() {
     
     if (trsIDS.length) {
         boxify(
+            'boxify',
             parseInt($('#size').val()),
             trsIDS,
             ($('#draw-CDS').attr('state') === 'on' ? true : false),
             $('#transcript-fill-color').val(),
             $('#transcript-stroke-color').val(),
             $('#cds-fill-color').val(),
-            $('#cds-stroke-color').val()
+            $('#cds-stroke-color').val(),
+            ($('#toggle-theme').attr('state') === 'on' ? '#ddd' : 'black')
         );
         addSeqScroll(trsIDS.length);
     }
@@ -320,13 +322,15 @@ function loadData() {
 
             // Draw models
             boxify(
+                'boxify',
                 parseInt($('#size').val()),
                 trsIDS,
                 ($('#draw-CDS').attr('state') === 'on' ? true : false),
                 $('#transcript-fill-color').val(),
                 $('#transcript-stroke-color').val(),
                 $('#cds-fill-color').val(),
-                $('#cds-stroke-color').val()
+                $('#cds-stroke-color').val(),
+                ($('#toggle-theme').attr('state') === 'on' ? '#ddd' : 'black')
             );
 
             // Display settings
@@ -363,7 +367,7 @@ $(document).keypress((e) => {
 });
 
 /* DRAW STUFF */
-function boxify(size, trsIDS, drawTheCDS=true, exonFill='#428bca', exonStroke='#428bca', cdsFill='#51A351', cdsStroke='#51A351') {
+function boxify(elementID, size, trsIDS, drawTheCDS=true, exonFill='#428bca', exonStroke='#428bca', cdsFill='#51A351', cdsStroke='#51A351', fontColor='black') {
 
     // Scale the genomic sequence element to the same size as the 
     // transcript models and set the left margin
@@ -408,7 +412,7 @@ function boxify(size, trsIDS, drawTheCDS=true, exonFill='#428bca', exonStroke='#
             return;
         }
 
-        let canvas = document.getElementById('boxify');
+        let canvas = document.getElementById(elementID);
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
@@ -423,7 +427,7 @@ function boxify(size, trsIDS, drawTheCDS=true, exonFill='#428bca', exonStroke='#
         // Draw each transcript
         for (let i = 0; i < trsIDS.length; i++) {
             let tID = trsIDS[i];
-            drawTranscript(tID, data['transcripts'][tID]['exons'], data['scaledExonCoord'], data['gene']['strand'], DEFAULT_BORDER_MARGIN + (i * (BOX_HEIGHT + HALF_BOX_HEIGHT)), exonFill, exonStroke);
+            drawTranscript(tID, data['transcripts'][tID]['exons'], data['scaledExonCoord'], data['gene']['strand'], DEFAULT_BORDER_MARGIN + (i * (BOX_HEIGHT + HALF_BOX_HEIGHT)), exonFill, exonStroke, fontColor);
         }
 
         // Draw the CDS
@@ -588,7 +592,7 @@ function addSeqScroll(nT) {
 
     // Place the expand-seq caret
     const seqRect = $('#boxify')[0].getBoundingClientRect();
-    $('#expand-seq').offset({ top: seqRect.bottom - 20, left: seqRect.left + 100 });
+    $('#expand-seq').offset({ top: seqRect.height - 20, left: seqRect.left + 100 });
 
     // See if the window needs to be hidden
     if ($('#show-sequence').attr('state') === 'off') {
@@ -747,13 +751,15 @@ $(document).on('click', '#primer-search-submit', function(e) {
         localStorage.setItem('data', JSON.stringify(data));
 
         boxify(
+            'boxify',
             parseInt($('#size').val()),
             visibleIDS,
             ($('#draw-CDS').attr('state') === 'on' ? true : false),
             $('#transcript-fill-color').val(),
             $('#transcript-stroke-color').val(),
             $('#cds-fill-color').val(),
-            $('#cds-stroke-color').val()
+            $('#cds-stroke-color').val(),
+            ($('#toggle-theme').attr('state') === 'on' ? '#ddd' : 'black')
         );
         addSeqScroll(visibleIDS.length);
 
@@ -827,11 +833,23 @@ $(document).on('click', '#reset-settings', () => {
 // Save as PNG
 document.querySelector('#download-png').addEventListener('click', (e) => {
 
-    const canvas = document.getElementById('boxify');
+    boxify(
+        'save-image',
+        parseInt($('#size').val()),
+        $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get(),
+        ($('#draw-CDS').attr('state') === 'on' ? true : false),
+        $('#transcript-fill-color').val(),
+        $('#transcript-stroke-color').val(),
+        $('#cds-fill-color').val(),
+        $('#cds-stroke-color').val(),
+        'black'
+    );
+
+    const canvas = document.getElementById('save-image');
     const a = document.createElement('a');
     a.href = canvas.toDataURL();
     a.download = $('#search-gene').val() + '.png';
-    
+
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -840,12 +858,25 @@ document.querySelector('#download-png').addEventListener('click', (e) => {
 
 // Save as SVG
 document.querySelector('#download-svg').addEventListener('click', (e) => {
-    const canvas = document.getElementById('boxify');
+
+    boxify(
+        'save-image',
+        parseInt($('#size').val()),
+        $('#select-transcripts').find('li.selected > span').map((i, e) => { return $(e).html(); }).get(),
+        ($('#draw-CDS').attr('state') === 'on' ? true : false),
+        $('#transcript-fill-color').val(),
+        $('#transcript-stroke-color').val(),
+        $('#cds-fill-color').val(),
+        $('#cds-stroke-color').val(),
+        'black'
+    );
+
+    const canvas = document.getElementById('save-image');
     const ctx = canvas.getContext('2d');
-    $('#svg-image').html(ctx.getSVG());
+    $('#save-image').html(ctx.getSVG());
     $('svg').attr('xmlns', 'http://www.w3.org/2000/svg');
 
-    const svgContent = document.getElementById('svg-image').innerHTML,
+    const svgContent = document.getElementById('save-image').innerHTML,
           blob = new Blob([svgContent], {
               type: 'image/svg+xml'
           }),
@@ -861,7 +892,7 @@ document.querySelector('#download-svg').addEventListener('click', (e) => {
     document.body.removeChild(link);
 
     // Remove it again
-    $('#svg-image').html('');
+    $('#save-image').html('');
 });
 
 // Save PCR results
