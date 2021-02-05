@@ -26,7 +26,7 @@
 
                 <div id="boxify-header">
                     <h1>Boxify</h1>
-                    <span>: transcript drawing made easy</span>
+                    <span>: transcript drawing made easy!</span>
                 </div>
 
                 <div id="search">
