@@ -7,7 +7,7 @@ The Boxify website can be roughly divided into three sections: 1) The search fie
 
 ![Boxify overview](/assets/img/help.png)
 
-#### Search field (1)
+#### Search (1)
 Basic search field. The first five matching search suggestions are given as soon as three or more character are entered. Simply press `ENTER` or click one of the suggested isoform names to start.
 
 #### Drawing area (2)
@@ -23,13 +23,28 @@ Boxify enables the user to submit (theoretically infinite) primers to search aga
 __Note__: The primer "boxes" are scaled based on their sequence length and thus, for very large isoforms, the boxes might just be 1 or 2 pixels in size. 
 
 #### Settings/Customization (3)
+All changes made using the various settings / customization options in this section will immediately take effect and alter the drawn transcripts.  
+
 ##### Transcript visibility / ordering (3a)
+The visibility of the transcripts can be toggled in this section. By default all transcripts are displayed and at least one transcript (the last remaining visible transcript) is displayed at all times. Additionally, the order of the transcripts can be changed by dragging and dropping the transcript identifiers. 
+
 ##### Model sizing (3b)
+Simply adjust the size of the isoform models by dragging the slider.
+
 ##### Display toggles (3c)
+Options to hide/show the CDS regions and the sequence display. By default both are shown. __Note__: The sequence display is __not__ included in the exported image.
+
 ##### Color settings (3d)
+Adjust the fill and stroke colors of exonic and coding regions. The color of the introns (the connecting lines) is based on the transcript stroke property. 
+
 ##### Reset (3e)
+Reset all settings (with the exception of the transcript order) to their defaults. 
+
 ##### Downloads (3f)
+Contains download buttons for saving a PNG or SVG (vector) image of the currently displayed models. If any primers were given, an additional button will be available to download the PCR results.
+
 ##### Themes (3g)
+Two basic themes are available for Boxify: a light and a dark theme. The theme is automatically switched based on the time of day, with the light theme being the default from 8AM to 6PM and the dark theme for the time between 6PM and 8AM. The theme can of course always be manually changed by the user.
 
 ### Authors
 Boxify was created by Peter Venhuizen and vigorously tested by Barbara Niemeth, Ezequiel Petrillo, Maria Kalyna, and Stefan Riegler, without whom this tool would never have existed!
