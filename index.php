@@ -24,6 +24,11 @@
         <div class="container">
             <aside>
 
+                <div id="boxify-header">
+                    <h1>Boxify</h1>
+                    <span>: transcript drawing made easy</span>
+                </div>
+
                 <div id="search">
                     <i class="bi-search"></i>
                     <input type="search" id="search-gene" placeholder="Search gene" aria-label="Search for a gene" value="AT3G61860" autofocus>
@@ -140,7 +145,10 @@
 
             </main>
 
-            <footer></footer>
+            <footer>
+                <span id="copyright">&copy; 2020 - Peter Venhuizen</span>
+                <span id="github">See the Boxify <a href="https://github.com/KalynaLab/boxify">GitHub</a> page for help and to report any bugs and issues via the <a href="https://github.com/KalynaLab/boxify/issues">issue tracker</a></span>
+            </footer>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
