@@ -13,6 +13,10 @@ aside p {
     color: #ccc;
 }
 
+#boxify-header h1 {
+    color: var(--boxify-green);
+}
+
 /* SEARCH */
 #search, #transcripts, #settings, #downloads, #theme {
     border-bottom: 1px solid var(--04dp);
@@ -97,4 +101,11 @@ input[type="color"]:focus {
 }
 .pcr button {
     background-color: var(--boxify-green);
+}
+
+footer {
+    border-top: 1px solid var(--04dp);
+}
+footer a {
+    color: var(--boxify-green);
 }

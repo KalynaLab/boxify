@@ -38,6 +38,15 @@ aside {
     border-right: 1px solid black;
 }
 
+#boxify-header {
+    padding: 1em 1em 0 1em;
+}
+#boxify-header h1 {
+    font-weight: 400;
+    display: inline;
+    color: var(--boxify-blue);
+}
+
 aside h2 {
     text-align: center;
     padding: 0.25em 0;
@@ -445,6 +454,14 @@ pre { display: inline-block; }
 
 footer {
     grid-area: footer;
+    padding: 0.5em 1em;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid black;
+}
+footer a {
+    text-decoration: none;
+    color: var(--boxify-blue);
 }
 
 /* Scroll bar customisation */
