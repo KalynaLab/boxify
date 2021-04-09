@@ -70,8 +70,8 @@ def create_boxify_db_tables(gtf_file, genome_fasta, zip=True):
         
         # Write CDS and exons coordinates
         for t_id in sorted(g2t[g_id]["transcripts"]):
-            cds_out.write( '\n'.join([ "{}\t{}\t{}".format(t_id, x[0], x[1]) for x in gtf[t_id]["CDS"] ]) )
-            exon_out.write( '\n'.join([ "{}\t{}\t{}".format(t_id, x[0], x[1]) for x in gtf[t_id]["exon"] ]) )
+            cds_out.write( '\n'.join([ "{}\t{}\t{}".format(t_id, x[0], x[1]) for x in gtf[t_id]["CDS"] ]) + '\n' )
+            exon_out.write( '\n'.join([ "{}\t{}\t{}".format(t_id, x[0], x[1]) for x in gtf[t_id]["exon"] ]) + '\n')
 
         # Get the start and end coordinates of each gene and write to BED file
         start = min([ min(x) for t_id in g2t[g_id]["transcripts"] for x in gtf[t_id]["exon"] ])
