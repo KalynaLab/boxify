@@ -358,6 +358,7 @@ function loadData() {
 
 }
 
+// press enter to load data in search bar
 $(document).keypress((e) => {
     let keycode = (e.keyCode ? e.keyCode : e.which);
     if (keycode === 13) {
