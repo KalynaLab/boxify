@@ -124,8 +124,6 @@
             
             <main>
 
-                <div class="loader"></div>
-
                 <canvas id="boxify">
                     Your browser does not support HTML5 support.
                 </canvas>
