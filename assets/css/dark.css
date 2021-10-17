@@ -109,3 +109,9 @@ footer {
 footer a {
     color: var(--boxify-green);
 }
+
+/* LOADER */
+.loader {
+    border: 12px solid var(--01dp);
+    border-top: 12px solid var(--boxify-green);
+}

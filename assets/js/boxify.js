@@ -271,9 +271,22 @@ function loadData() {
     console.log(geneID);
 
     // Data retrieval and drawing
-    $.post('assets/ajax/get_data.php', { gene: geneID }).done((output) => {
+    // add loader
+    $('main').prepend($('<div>', { 'class': 'loader' })); 
 
-        data = $.parseJSON(output);
+    // fetch data
+    // fetch('assets/ajax/get_data.php', { gene: geneID })
+    fetch('assets/ajax/get_data.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ gene: geneID })
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        console.log(data);
 
         // On success
         if (data['okay']) {
@@ -354,10 +367,103 @@ function loadData() {
             $('#error-messages').show();
         }
 
-    });   
+        // remove loader
+        $('.loader').remove();
+
+    })
+    .catch((error) => {
+        console.error('Error: ', error);
+    });
+
+    // $.post('assets/ajax/get_data.php', { gene: geneID }).done((output) => {
+
+    //     $main.remove('.loader');
+    //     data = $.parseJSON(output);
+
+    //     // On success
+    //     if (data['okay']) {
+
+    //         data['gene']['geneID'] = geneID;
+    //         const trsIDS = Object.keys(data['transcripts']),
+    //             geneStart = parseInt(data['gene']['start']),
+    //             strand = data['gene']['strand'],
+    //             seq = (strand === '+') ? data['gene']['seq'] : data['gene']['seq'].split('').reverse().join('');
+
+    //         // Get the spliced sequences
+    //         for (let i = 0; i < trsIDS.length; i++) {
+    //             let tID = trsIDS[i],
+    //                 exons = data['transcripts'][tID]['exons'],
+    //                 splicedSeq = '',
+    //                 displaySeq = ' '.repeat((exons[0][0] - geneStart - 1 >= 0 ? exons[0][0] - geneStart - 1 : exons[0][0] - geneStart));
+
+    //             for (let j in exons) {
+    //                 const start = exons[j][0],
+    //                     end = exons[j][1],
+    //                     relStart = (start - geneStart - 1 < 0 ? start - geneStart : start - geneStart - 1);
+
+    //                 if (j > 0) { 
+    //                     const intronStart = exons[(j - 1)][1],
+    //                         intronEnd = exons[j][0] - 1;
+    //                     displaySeq += seq.slice(intronStart - geneStart, intronEnd - geneStart).toLowerCase();
+    //                 }
+
+    //                 splicedSeq += seq.slice(relStart, (end - geneStart));
+    //                 displaySeq += seq.slice(relStart, (end - geneStart)).toUpperCase();
+    //             }
+
+    //             data['transcripts'][tID]['seq'] = (strand === '+') ? splicedSeq : splicedSeq.split('').reverse().join('');
+    //             data['transcripts'][tID]['display-seq'] = `<div class="display-seq" data-transcript-id="${tID}">${displaySeq.split('').map(nt => `<pre class='X'>${nt}</pre>`).join('')}</div>`;
+    //             //$('#display-seq').append(`<div class="display-seq" data-transcript-id="${tID}">${displaySeq.split('').map(nt => `<pre class='X'>${nt}</pre>`).join('')}</div>`);
+    //         }
+
+    //         // Store the data in localStorage
+    //         localStorage.setItem('data', JSON.stringify(data));
+
+
+    //         // Add the genomic sequence to the document and assign class per nucleotide
+    //         $('#genomic-seq').html(seq.split('').map(nt => `<span class='${nt}'>${nt}</span>`).join(''));
+    //         $('#sequences').offset({ left: $('main')[0].getBoundingClientRect().left + DEFAULT_LEFT_MARGIN });
+    //         $('#expand-seq').show();
+
+    //         // Draw models
+    //         boxify(
+    //             'boxify',
+    //             parseInt($('#size').val()),
+    //             trsIDS,
+    //             ($('#draw-CDS').attr('state') === 'on' ? true : false),
+    //             $('#transcript-fill-color').val(),
+    //             $('#transcript-stroke-color').val(),
+    //             $('#cds-fill-color').val(),
+    //             $('#cds-stroke-color').val(),
+    //             ($('#toggle-theme').attr('state') === 'on' ? '#ddd' : 'black')
+    //         );
+
+    //         // Display settings
+    //         // List the loaded transcripts
+    //         $('#select-transcripts').html('');
+    //         for (let i = 0; i < trsIDS.length; i++) {
+    //             let tID = trsIDS[i];
+    //             // $('#select-transcripts').append(`<button type='button' class='list-group-item list-group-item-action list-group-item-dark' draggable='true'>${tID}</button>`);
+    //             $('#select-transcripts').append(`<li class="t-id selected" draggable="true"><span>${tID}</span><i class="bi-eye"></i></span></li>`);
+    //         }
+            
+    //         $('#error-messages').hide();
+    //         $('#transcripts, #settings').show();
+    //         resetPCR(); // Might not need this function, because I think I'm only calling it once
+    //         $('#downloads').css('display', 'flex');
+    //         addSeqScroll(trsIDS.length);
+        
+    //     } else { // Show error
+    //         $('#error-messages').html(`<i class="bi-exclamation-triangle-fill"></i><span>${data['messages']}</span>`);
+    //         $('#error-messages').css('display', 'flex');
+    //         $('#error-messages').show();
+    //     }
+
+    // });   
 
 }
 
+// press enter to load data in search bar
 $(document).keypress((e) => {
     let keycode = (e.keyCode ? e.keyCode : e.which);
     if (keycode === 13) {

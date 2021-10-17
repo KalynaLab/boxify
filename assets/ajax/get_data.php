@@ -17,9 +17,17 @@
 	UPDATE 10-10-2019: I probably forget about all that, I'm storing
 	the data in the html now, so that should work I hope. */
 
-	if (isset($_POST["gene"])) {
+    // get the json POST data
+    $params = json_decode(file_get_contents('php://input'), true);
 
-		$g_id = $_POST["gene"];
+	$g_id = $params['gene'];
+	$data = array(
+		"okay" => False,
+		"messages" => "Nothing happened...",
+		"gene" => $g_id
+	);
+
+	if (array_key_exists("gene", $params)) {
 		$transcripts = array();
 		$exonCoord = array();
 		$cdsCoord = array();
@@ -44,6 +52,7 @@
 		try {
 
 			$stmt = $db->prepare("SELECT t_id, start, end FROM exons WHERE t_id LIKE ? ORDER BY start");
+			// $stmt->bindValue(1, "%$gene%", PDO::PARAM_STR);
 			$stmt->bindValue(1, "%$g_id%", PDO::PARAM_STR);
 			$stmt->execute();
 			if ($stmt->rowCount() > 0) {
@@ -59,12 +68,12 @@
 					array_push($exonCoord, (int)$row["start"], (int)$row["end"]);
 				}
 			} else {
-				echo json_encode(array( "okay" => False, "messages" => "Error fetching exons." ));
+				echo json_encode(array( "okay" => False, "messages" => "Error fetching exons."));
 				exit;
 			}
 
 		} catch (PDOException $ex) {
-			echo json_encode(array( "okay" => False, "messages" => $ex ));
+			echo json_encode(array( "okay" => False, "messages" => "Something went wrong. We could not load this gene model."));
 			exit;
 		}
 
@@ -89,7 +98,7 @@
 			}
 
 		} catch (PDOException $ex) {
-			echo json_encode(array( "okay" => False, "messages" => $ex));
+			echo json_encode(array("okay" => False, "messages" => "Something went wrong. We could not load this gene model."));
 			exit;
 		}
 
@@ -100,19 +109,17 @@
 		$uniqCdsCoord = array_unique($cdsCoord);
 		sort($uniqCdsCoord);
 
-		# Return JSON array
-		$data = array(
-			"okay" => True,
-			"messages" => "Everything seems fine! :D",
-			"transcripts" => $transcripts,
-			"exonCoord" => $uniqExonCoord,
-			"cdsCoord" => $uniqCdsCoord,
-			"gene" => $gene,
-			"primers" => array()
-		);
-
-		echo json_encode($data);
-		exit;
+		$data['okay'] = true;
+		$data['messages'] = 'Everything seems fine! :D';
+		$data['gene'] = $gene;
+		$data['transcripts'] = $transcripts;
+		$data['exonCoord'] = $uniqExonCoord;
+		$data['cdsCoord'] = $uniqCdsCoord;
+		$data['primers'] = array();
 
 	}
+
+	echo json_encode($data);
+	exit;
+
 ?>
